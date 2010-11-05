@@ -1,0 +1,4 @@
+django_ecoapi.egg-info
+*.swp
+*~
+*.pyc
