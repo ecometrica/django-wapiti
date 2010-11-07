@@ -1,3 +1,4 @@
+import random
 import re
 
 from django.core.cache import cache
@@ -26,9 +27,8 @@ class APIKey(models.Model):
         for m in METHODS:
             cache.delete(self._perm_cache_key(m))
 
-    def is_authorized(request):
-        q = self.permission_set.objects.filter(
-            anonymous_access = request.is_anonymous,
+    def is_authorized(self, request):
+        q = self.permission_set.filter(
             method = request.method
         )
 
@@ -57,12 +57,18 @@ class APIKey(models.Model):
 
 class Permission(models.Model):
     key = models.ForeignKey('APIKey')
-    anonymous_access = models.BooleanField(default=False)
     resource_regex = models.CharField(max_length=256)
     method = models.CharField(choices=zip(METHODS, METHODS), max_length=8)
+
+    def __unicode__(self):
+        return u'%s %s %s' % (
+            self.key.name,
+            self.method,
+            self.resource_regex,
+        )
 
     def save(self, *args, **kwargs):
         # invalidate cached permission regexes
         self.key.flush_permissions_cache()
-        super(Permissions, self).save(*args, **kwargs)
+        super(Permission, self).save(*args, **kwargs)
 

@@ -6,9 +6,10 @@ from ecoapi import helpers
 from ecoapi import handlers
 
 def object_view_or_class_method(request, ver, type, id_or_method):
-    if not helpers._check_perms:
+    if not helpers._check_perms(request):
         resp = rc.FORBIDDEN
-        resp.write("Invalid API key")
+        resp.write(" Invalid API key")
+        return resp
 
     # check if type is registered barf if not
     if type not in helpers._registered_types:
@@ -59,9 +60,10 @@ def _class_method(request, type, method):
     
 
 def instance_method(request, ver, type, id, method):
-    if not helpers._check_perms:
+    if not helpers._check_perms(request):
         resp = rc.FORBIDDEN
-        resp.write("Invalid API key")
+        resp.write(" Invalid API key")
+        return resp
 
     # check if type is registered barf if not
     try:
