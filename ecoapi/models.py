@@ -3,9 +3,12 @@ import re
 from django.core.cache import cache
 from django.db import models
 
-from ecoapi import new_apikey
+from ecoapi.conf import APIKEY_ALLOWABLE_LETTERS, APIKEY_LENGTH
 
 METHODS = ('GET', 'POST', 'PUT', 'DELETE')
+
+def new_apikey():
+    return ''.join(random.sample(APIKEY_ALLOWABLE_LETTERS, APIKEY_LENGTH))
 
 class APIKey(models.Model):
     name = models.CharField(max_length=255)

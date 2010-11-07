@@ -2,32 +2,36 @@ from collections import namedtuple
 from functools import wraps
 
 from django.db.models import get_apps
+from piston.utils import rc
 
-def new_apikey():
-    from ecoapi import APIKEY_ALLOWABLE_LETTERS, APIKEY_LENGTH
-    return ''.join(random.sample(APIKEY_ALLOWABLE_LETTERS, APIKEY_LENGTH))
+from ecoapi.conf import ID_RE
+from ecoapi.models import APIKey
+
+_RegisteredType = namedtuple('RegisteredType', ('model', ))
+
+_registered_types = {}
 
 def register(name, modelapi):
-    from ecoapi import registered_types, RegisteredType
-    if modelapi.__name__ in registered_types:
+    """Register a model with the API"""
+    global _registered_types
+    if modelapi.__name__ in _registered_types:
         return
 
-    registered_types[name] = RegisteredType(model=modelapi)
+    _registered_types[name] = _RegisteredType(model=modelapi)
 
 def api_method(f):
+    """Decorator to declare a method api-accessible"""
     f.api = True
     @wraps(f)
     def wrapper(*args, **kwargs):
         return f(*args, **kwargs)
     return wrapper
 
-def is_id(id):
-    from ecoapi import ID_RE
+def _is_id(id):
     return ID_RE.match(id)
 
-def register_models():
+def _register_models():
     """Find app api submodules and register models"""
-    global registered_types
     for a in get_apps():
         try:
             _temp = __import__('.'.join(a.__name__.split('.')[:-1] + ['api']), 
@@ -35,4 +39,12 @@ def register_models():
         except ImportError:
             pass
 
+def _check_perms(request):
+    """Checks if requester api key has permissions for this request"""
+    try:
+        apikey = APIKey.objects.get(key=request.GET['k'])
+    except (KeyError, APIKey.DoesNotExist):
+        return False
+
+    return apikey.is_authorized(request)
 

@@ -2,26 +2,30 @@ from piston.handler import AnonymousBaseHandler
 from piston.resource import Resource
 from piston.utils import rc
 
-from ecoapi import *
+from ecoapi import helpers
+from ecoapi import handlers
 
 def object_view_or_class_method(request, ver, type, id_or_method):
+    if not helpers._check_perms:
+        resp = rc.FORBIDDEN
+        resp.write("Invalid API key")
+
     # check if type is registered barf if not
-    if type not in registered_types:
+    if type not in helpers._registered_types:
         return rc.NOT_FOUND
     
     # determine if id_or_method is an id, call object_view if so
-    if is_id(id_or_method):
-        return object_view(request, type, id_or_method)
+    if helpers._is_id(id_or_method):
+        return _object_view(request, type, id_or_method)
     else:
         # otherwise call class_method
-        return class_method(request, type, id_or_method)
+        return _class_method(request, type, id_or_method)
 
-def object_view(request, type, id):
+def _object_view(request, type, id):
     return rc.NOT_IMPLEMENTED
 
-def class_method(request, type, method):
-    #import pdb; pdb.set_trace()
-    model = registered_types[type].model
+def _class_method(request, type, method):
+    model = helpers._registered_types[type].model
 
     # check if method exists
     try:
@@ -44,7 +48,7 @@ def class_method(request, type, method):
         return rc.NOT_FOUND
 
     # create piston handler resource and call it
-    class H(AnonymousBaseHandler):
+    class H(handlers.EcoBaseClassHandler):
         allowed_methods = ('GET',)
         cls_method = m
 
@@ -55,9 +59,13 @@ def class_method(request, type, method):
     
 
 def instance_method(request, ver, type, id, method):
+    if not helpers._check_perms:
+        resp = rc.FORBIDDEN
+        resp.write("Invalid API key")
+
     # check if type is registered barf if not
     try:
-        model = registered_types[type].model
+        model = helpers._registered_types[type].model
     except KeyError:
         return rc.NOT_FOUND
 
@@ -88,7 +96,7 @@ def instance_method(request, ver, type, id, method):
         return rc.NOT_FOUND
 
     # create piston handler resource and call it
-    class H(AnonymousBaseHandler):
+    class H(handlers.EcoBaseObjectHandler):
         allowed_methods = ('GET',)
         method = m
 
