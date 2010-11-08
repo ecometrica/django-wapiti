@@ -4,106 +4,109 @@ from piston.utils import rc
 
 from ecoapi import helpers
 from ecoapi import handlers
+from ecoapi.views.base_view import View
 
-def object_view_or_class_method(request, ver, type, id_or_method):
-    if not helpers._check_perms(request):
-        resp = rc.FORBIDDEN
-        resp.write(" Invalid API key")
-        return resp
+class EcoApiBaseView(View):
+    def dispatch(self, request, *args, **kwargs):
+        # always check API Key permissions
+        if not helpers._check_perms(request):
+            resp = rc.FORBIDDEN
+            resp.write(" Invalid API key")
+            return resp
+        return super(EcoApiBaseView, self).dispatch(request, *args, **kwargs)
 
-    # check if type is registered barf if not
-    if type not in helpers._registered_types:
-        return rc.NOT_FOUND
-    
-    # determine if id_or_method is an id, call object_view if so
-    if helpers._is_id(id_or_method):
-        return _object_view(request, type, id_or_method)
-    else:
-        # otherwise call class_method
-        return _class_method(request, type, id_or_method)
+class EcoApiTypeBaseView(EcoApiBaseView):
+    def dispatch(self, request, ver, type, *args, **kwargs):
+        # check if type is registered barf if not
+        import pdb; pdb.set_trace()
+        try:
+            self.model = helpers._registered_types[type].model
+        except KeyError:
+            return rc.NOT_FOUND
+        return super(EcoApiTypeBaseView, self).dispatch(request, ver, type, *args, **kwargs)
 
-def _object_view(request, type, id):
-    return rc.NOT_IMPLEMENTED
+class ObjectOrClassMethodView(EcoApiTypeBaseView):
+    def get(self, request, ver, type, id_or_method):
+        
+        # determine if id_or_method is an id, call object_view if so
+        if helpers._is_id(id_or_method):
+            return self._object_view(request, type, id_or_method)
+        else:
+            # otherwise call class_method
+            return self._class_method(request, type, id_or_method)
 
-def _class_method(request, type, method):
-    model = helpers._registered_types[type].model
+    def _object_view(self, request, type, id):
+        return rc.NOT_IMPLEMENTED
 
-    # check if method exists
-    try:
-        # note: this looks dangerous - the type and method are passed from the
-        # client - but the urls definition prevents any other char than
-        # [a-zA-Z_]
-        m = eval('model.' + method)
-    except AttributeError:
-        return rc.NOT_FOUND
-
-    # check if method is registered with the API
-    try:
-        if not m.api:
-            return rc.FORBIDDEN
-    except AttributeError:
-        return rc.FORBIDDEN
-    
-    # check if method is a class method
-    if m.im_self is not model:
-        return rc.NOT_FOUND
-
-    # create piston handler resource and call it
-    class H(handlers.EcoBaseClassHandler):
-        allowed_methods = ('GET',)
-        cls_method = m
-
-        def read(self, request, *args, **kwargs):
-            return self.cls_method(*args, **kwargs)
-
-    return Resource(H)(request, request.GET['src_airport_code'], request.GET['dst_airport_code'])
-    
-
-def instance_method(request, ver, type, id, method):
-    if not helpers._check_perms(request):
-        resp = rc.FORBIDDEN
-        resp.write(" Invalid API key")
-        return resp
-
-    # check if type is registered barf if not
-    try:
+    def _class_method(self, request, type, method):
         model = helpers._registered_types[type].model
-    except KeyError:
-        return rc.NOT_FOUND
 
-    # check if object exists
-    try:
-        o = model.objects.get(id=id)
-    except model.DoesNotExist:
-        return rc.NOT_FOUND
+        # check if method exists
+        try:
+            # note: this looks dangerous - the type and method are passed from the
+            # client - but the urls definition prevents any other char than
+            # [a-zA-Z_]
+            m = eval('model.' + method)
+        except AttributeError:
+            return rc.NOT_FOUND
 
-    # check if method exists
-    try:
-        # note: this looks dangerous - the type and method are passed from the
-        # client - but the urls definition prevents any other char than
-        # [a-zA-Z_]
-        m = eval('o.' + method)
-    except AttributeError:
-        return rc.NOT_FOUND
-
-    # check if method is registered with the API
-    try:
-        if not m.api:
+        # check if method is registered with the API
+        try:
+            if not m.api:
+                return rc.FORBIDDEN
+        except AttributeError:
             return rc.FORBIDDEN
-    except AttributeError:
-        return rc.FORBIDDEN
-    
-    # check if method is an instance method
-    if m.im_self is model:
-        return rc.NOT_FOUND
+        
+        # check if method is a class method
+        if m.im_self is not model:
+            return rc.NOT_FOUND
 
-    # create piston handler resource and call it
-    class H(handlers.EcoBaseObjectHandler):
-        allowed_methods = ('GET',)
-        method = m
+        # create piston handler resource and call it
+        class H(handlers.EcoBaseClassHandler):
+            allowed_methods = ('GET',)
+            cls_method = m
 
-        def read(self, request, *args, **kwargs):
-            return self.method(*args, **kwargs)
+            def read(self, request, *args, **kwargs):
+                return self.cls_method(*args, **kwargs)
 
-    return Resource(H)(request)
+        return Resource(H)(request, request.GET['src_airport_code'], request.GET['dst_airport_code'])
+
+class InstanceMethodView(EcoApiTypeBaseView):
+    def get(self, request, ver, type, id_or_method):
+
+        # check if object exists
+        try:
+            self.obj = self.model.objects.get(id=id)
+        except model.DoesNotExist:
+            return rc.NOT_FOUND
+
+        # check if method exists
+        try:
+            # note: this looks dangerous - the type and method are passed from the
+            # client - but the urls definition prevents any other char than
+            # [a-zA-Z_]
+            self.method = eval('self.obj.' + method)
+        except AttributeError:
+            return rc.NOT_FOUND
+
+        # check if method is registered with the API
+        try:
+            if not self.method.api:
+                return rc.FORBIDDEN
+        except AttributeError:
+            return rc.FORBIDDEN
+        
+        # check if method is an instance method
+        if self.method.im_self is self.model:
+            return rc.NOT_FOUND
+
+        # create piston handler resource and call it
+        class H(handlers.EcoBaseObjectHandler):
+            allowed_methods = ('GET',)
+            method = self.method
+
+            def read(self, request, *args, **kwargs):
+                return self.method(*args, **kwargs)
+
+        return Resource(H)(request)
 
