@@ -5,7 +5,6 @@ from django.db.models import get_apps
 from piston.utils import rc
 
 from ecoapi.conf import ID_RE
-from ecoapi.models import APIKey
 
 _RegisteredType = namedtuple('RegisteredType', ('model', ))
 
@@ -39,12 +38,4 @@ def _register_models():
         except ImportError:
             pass
 
-def _check_perms(request):
-    """Checks if requester api key has permissions for this request"""
-    try:
-        apikey = APIKey.objects.get(key=request.GET['k'])
-    except (KeyError, APIKey.DoesNotExist):
-        return False
-
-    return apikey.is_authorized(request)
 

@@ -2,11 +2,13 @@
 import copy
 from django import http
 from django.core.exceptions import ImproperlyConfigured
+from django.db import models
 from django.template import RequestContext, loader
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import update_wrapper
 
 from ecoapi import helpers
+from ecoapi.models import APIKey
 
 class classonlymethod(classmethod):
     def __get__(self, instance, owner):
@@ -85,9 +87,19 @@ class View(object):
 class EcoApiBaseView(View):
     def dispatch(self, request, *args, **kwargs):
         # always check API Key permissions
-        if not helpers._check_perms(request):
+        self.api_key = request.GET.get('k', None)
+        authorized = True
+        try:
+            apikey = APIKey.objects.get(key=self.api_key)
+        except APIKey.DoesNotExist:
+            authorized = False
+        else:
+            authorized = apikey.is_authorized(request)
+
+        if not authorized:
             resp = rc.FORBIDDEN
             resp.write(" Invalid API key")
             return resp
         return super(EcoApiBaseView, self).dispatch(request, *args, **kwargs)
+
 
