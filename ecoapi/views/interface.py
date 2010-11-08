@@ -1,8 +1,12 @@
 from piston.utils import rc
 
-def generic_interface(request):
-    return rc.NOT_IMPLEMENTED
+from ecoapi.views.base_view import EcoApiBaseView
 
-def interface(request, ver):
-    return rc.NOT_IMPLEMENTED
+class TopLevelInterfaceView(EcoApiBaseView):
+    def get(self, request):
+        return rc.NOT_IMPLEMENTED
+
+class InterfaceView(EcoApiBaseView):
+    def get(self, request, ver):
+        return rc.NOT_IMPLEMENTED
 

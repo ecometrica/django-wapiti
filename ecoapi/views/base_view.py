@@ -6,6 +6,8 @@ from django.template import RequestContext, loader
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import update_wrapper
 
+from ecoapi import helpers
+
 class classonlymethod(classmethod):
     def __get__(self, instance, owner):
         if instance is not None:
@@ -80,4 +82,12 @@ class View(object):
         )
         return http.HttpResponseNotAllowed(allowed_methods)
 
+class EcoApiBaseView(View):
+    def dispatch(self, request, *args, **kwargs):
+        # always check API Key permissions
+        if not helpers._check_perms(request):
+            resp = rc.FORBIDDEN
+            resp.write(" Invalid API key")
+            return resp
+        return super(EcoApiBaseView, self).dispatch(request, *args, **kwargs)
 

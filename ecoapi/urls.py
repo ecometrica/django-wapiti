@@ -1,10 +1,11 @@
 from django.conf.urls.defaults import *
 
-from ecoapi.views import ObjectOrClassMethodView, InstanceMethodView
+from ecoapi.views import *
+
 
 urlpatterns = patterns('ecoapi.views',
-        (r'^/?$', 'generic_interface'),
-        (r'^(?P<ver>[.0-9]+)/?$', 'interface'),
+        (r'^/?$', TopLevelInterfaceView.as_view()),
+        (r'^(?P<ver>[.0-9]+)/?$', InterfaceView.as_view()),
         (r'^(?P<ver>[.0-9]+)/(?P<type>[a-zA-Z_]+)/(?P<id_or_method>[a-zA-Z_]+)/?$', 
          ObjectOrClassMethodView.as_view()),
         (r'^(?P<ver>[.0-9]+)/(?P<type>[a-zA-Z_]+)/'

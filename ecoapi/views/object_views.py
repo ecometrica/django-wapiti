@@ -4,21 +4,11 @@ from piston.utils import rc
 
 from ecoapi import helpers
 from ecoapi import handlers
-from ecoapi.views.base_view import View
-
-class EcoApiBaseView(View):
-    def dispatch(self, request, *args, **kwargs):
-        # always check API Key permissions
-        if not helpers._check_perms(request):
-            resp = rc.FORBIDDEN
-            resp.write(" Invalid API key")
-            return resp
-        return super(EcoApiBaseView, self).dispatch(request, *args, **kwargs)
+from ecoapi.views.base_view import EcoApiBaseView
 
 class EcoApiTypeBaseView(EcoApiBaseView):
     def dispatch(self, request, ver, type, *args, **kwargs):
         # check if type is registered barf if not
-        import pdb; pdb.set_trace()
         try:
             self.model = helpers._registered_types[type].model
         except KeyError:
