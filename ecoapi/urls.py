@@ -12,5 +12,6 @@ urlpatterns = patterns('ecoapi.views',
         (r'^(?P<ver>[.0-9]+)/(?P<type>[a-zA-Z0-9_]+)/'
          r'(?P<id>[a-zA-Z0-9_]+)/(?P<method>[a-zA-Z0-9_]+)/?$', 
          InstanceMethodView.as_view()),
+        (r'.*', EcoApi404View.as_view()),
 )
 

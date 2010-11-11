@@ -125,6 +125,17 @@ class EcoApiBaseView(View):
             resp = Encoder(self.format).encode(resp)
         return HttpResponse(resp, mimetype="application/%s"%self.format)
 
-
+class EcoApi404View(View):
+    def get(self, request):
+        return rc.NOT_FOUND
+    
+    def put(self, request):
+        return rc.NOT_FOUND
+    
+    def delete(self, request):
+        return rc.NOT_FOUND
+    
+    def post(self, request):
+        return rc.NOT_FOUND
 
 
