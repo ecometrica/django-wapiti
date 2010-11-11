@@ -16,7 +16,7 @@ class EcoApiTypeBaseView(EcoApiBaseView):
         return super(EcoApiTypeBaseView, self).dispatch(request, ver, type, *args, **kwargs)
 
 class ObjectOrClassMethodView(EcoApiTypeBaseView):
-    def get(self, request, ver, type, id_or_method):
+    def get(self, request, ver, type, id_or_method, *args, **kwargs):
         
         # determine if id_or_method is an id, call object_view if so
         if helpers._is_id(id_or_method):
@@ -51,18 +51,10 @@ class ObjectOrClassMethodView(EcoApiTypeBaseView):
         if m.im_self is not model:
             return rc.NOT_FOUND
 
-        # create piston handler resource and call it
-        class H(handlers.EcoBaseClassHandler):
-            allowed_methods = ('GET',)
-            cls_method = m
-
-            def read(self, request, *args, **kwargs):
-                return self.cls_method(*args, **kwargs)
-
-        return Resource(H)(request, request.GET['src_airport_code'], request.GET['dst_airport_code'])
+        return m(**self.args)
 
 class InstanceMethodView(EcoApiTypeBaseView):
-    def get(self, request, ver, type, id_or_method):
+    def get(self, request, ver, type, id, method):
 
         # check if object exists
         try:
@@ -91,12 +83,5 @@ class InstanceMethodView(EcoApiTypeBaseView):
             return rc.NOT_FOUND
 
         # create piston handler resource and call it
-        class H(handlers.EcoBaseObjectHandler):
-            allowed_methods = ('GET',)
-            method = self.method
-
-            def read(self, request, *args, **kwargs):
-                return self.method(*args, **kwargs)
-
-        return Resource(H)(request)
+        return self.method(**self.args)
 

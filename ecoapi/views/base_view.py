@@ -1,14 +1,20 @@
-# adapted from django 1.3's base class view
 import copy
+import json
+import inspect
+
+from piston.utils import rc
+
 from django import http
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.http import HttpResponse
 from django.template import RequestContext, loader
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import update_wrapper
 
 from ecoapi import helpers
 from ecoapi.models import APIKey
+from ecoapi.parsers import Decoder, Encoder
 
 class classonlymethod(classmethod):
     def __get__(self, instance, owner):
@@ -21,6 +27,7 @@ class View(object):
     Intentionally simple parent class for all views. Only implements
     dispatch-by-method and simple sanity checking.
     """
+    # adapted from django 1.3's base class view
 
     http_method_names = ['get', 'post', 'put', 'delete', 'head', 'options', 'trace']
 
@@ -70,8 +77,6 @@ class View(object):
         else:
             handler = self.http_method_not_allowed
         self.request = request
-        self.args = args
-        self.kwargs = kwargs
         return handler(request, *args, **kwargs)
 
     def http_method_not_allowed(self, request, *args, **kwargs):
@@ -87,7 +92,14 @@ class View(object):
 class EcoApiBaseView(View):
     def dispatch(self, request, *args, **kwargs):
         # always check API Key permissions
-        self.api_key = request.GET.get('k', None)
+        self.args = {}
+        for k, v in request.GET.iteritems():
+            self.args[k] = v
+        for k, v in request.POST.iteritems():
+            self.args[k] = v
+
+        self.api_key = self.args.pop('k', None)
+
         authorized = True
         try:
             apikey = APIKey.objects.get(key=self.api_key)
@@ -100,6 +112,19 @@ class EcoApiBaseView(View):
             resp = rc.FORBIDDEN
             resp.write(" Invalid API key")
             return resp
-        return super(EcoApiBaseView, self).dispatch(request, *args, **kwargs)
+
+        self.format = self.args.pop('format', 'json')
+        
+        # parse the arguments
+        self._decoder = Decoder(self.format)
+        for k, v in self.args.iteritems():
+            self.args[k] = self._decoder.decode(v)
+
+        resp = super(EcoApiBaseView, self).dispatch(request, *args, **kwargs)
+        if not isinstance(resp, HttpResponse):
+            resp = Encoder(self.format).encode(resp)
+        return HttpResponse(resp, mimetype="application/%s"%self.format)
+
+
 
 
