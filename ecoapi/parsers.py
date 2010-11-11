@@ -71,14 +71,14 @@ class Encoder(object):
         return value
 
     def object_to_dict(self, value):
-        for k, v in helpers._registered_types:
+        for k, v in helpers._registered_types.iteritems():
             if isinstance(value, v.model):
                 type_name = k
                 break
         try:
             api_str = value.__api_unicode__()
         except AttributeError:
-            api_str = value.__unicode__()
+            api_str = unicode(value)
 
         return {'type': type_name, 'id': value.id, 'str': api_str}
 
