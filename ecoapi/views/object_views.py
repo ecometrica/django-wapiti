@@ -2,6 +2,8 @@ from piston.handler import AnonymousBaseHandler
 from piston.resource import Resource
 from piston.utils import rc
 
+from django.db.models import Q
+
 from ecoapi import helpers
 from ecoapi import handlers
 from ecoapi.views.base_view import EcoApiBaseView
@@ -52,6 +54,49 @@ class ObjectOrClassMethodView(EcoApiTypeBaseView):
             return rc.NOT_FOUND
 
         return m(**self.args)
+
+class SearchView(EcoApiTypeBaseView):
+        
+    _CONDITIONS = {'not': '__invert__', 'and': '__and__', 'or': '__or__'}
+
+    def get(self, request, ver, type, *args, **kwargs):
+        
+        return self._search(request, type)
+    
+    def _search(self, request, type):
+        model = helpers._registered_types[type].model
+
+        # parse search query
+        import pdb; pdb.set_trace()
+        query_q = self._parse_search_query(self.args['query'])
+        search_results = model.objects.filter(query_q)
+        return list(search_results[:100])
+
+
+    def _parse_search_query(self, query):
+        if not query:
+            return Q()
+
+        elif (isinstance(query, list) and len(query) == 3 
+              and all(map(lambda i: isinstance(i, (str, unicode)), query))):
+            return Q(**{'__'.join(query[:2]) : query[2]})
+
+        elif isinstance(query, list):
+            q = None
+            cond = '__or__'
+            for t in query:
+                if isinstance(t, list):
+                    new_q = self._parse_search_query(t)
+                    if q is None:
+                        q = new_q
+                    else:
+                        q = getattr(q, cond)(new_q)
+                else:
+                    cond = self._CONDITIONS[t.lower()]
+            return q
+
+
+
 
 class InstanceMethodView(EcoApiTypeBaseView):
     def get(self, request, ver, type, id, method):
