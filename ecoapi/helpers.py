@@ -6,7 +6,7 @@ from piston.utils import rc
 
 from ecoapi.conf import ID_RE
 
-_RegisteredType = namedtuple('RegisteredType', ('model', ))
+_RegisteredType = namedtuple('RegisteredType', ('model', 'api'))
 
 _registered_types = {}
 
@@ -15,8 +15,11 @@ def register(name, modelapi):
     global _registered_types
     if modelapi.__name__ in _registered_types:
         return
+    if not modelapi.objects:
+        modelapi.objects = modelapi.model.objects
 
-    _registered_types[name] = _RegisteredType(model=modelapi)
+    _registered_types[name] = _RegisteredType(model=modelapi.model, 
+                                              api=modelapi)
 
 def api_method(f):
     """Decorator to declare a method api-accessible"""

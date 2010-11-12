@@ -74,11 +74,15 @@ class Encoder(object):
         for k, v in helpers._registered_types.iteritems():
             if isinstance(value, v.model):
                 type_name = k
+                api = v.api
                 break
         try:
             api_str = value.__api_unicode__()
         except AttributeError:
             api_str = unicode(value)
 
-        return {'type': type_name, 'id': value.id, 'str': api_str}
+        obj_dict = {'type': type_name, 'id': value.id, 'str': api_str}
+        for f in api.object_repr_fields:
+            abj_dict[f] = eval('value.' + f)
+        return obj_dict
 

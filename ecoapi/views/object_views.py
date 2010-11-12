@@ -13,6 +13,7 @@ class EcoApiTypeBaseView(EcoApiBaseView):
         # check if type is registered barf if not
         try:
             self.model = helpers._registered_types[type].model
+            self.api = helpers._registered_types[type].api
         except KeyError:
             return rc.NOT_FOUND
         return super(EcoApiTypeBaseView, self).dispatch(request, ver, type, *args, **kwargs)
@@ -31,14 +32,13 @@ class ObjectOrClassMethodView(EcoApiTypeBaseView):
         return rc.NOT_IMPLEMENTED
 
     def _class_method(self, request, type, method):
-        model = helpers._registered_types[type].model
 
         # check if method exists
         try:
             # note: this looks dangerous - the type and method are passed from the
             # client - but the urls definition prevents any other char than
             # [a-zA-Z_]
-            m = eval('model.' + method)
+            m = eval('self.model.' + method)
         except AttributeError:
             return rc.NOT_FOUND
 
@@ -50,7 +50,7 @@ class ObjectOrClassMethodView(EcoApiTypeBaseView):
             return rc.FORBIDDEN
         
         # check if method is a class method
-        if m.im_self is not model:
+        if m.im_self is not self.model:
             return rc.NOT_FOUND
 
         return m(**self.args)
@@ -64,12 +64,9 @@ class SearchView(EcoApiTypeBaseView):
         return self._search(request, type)
     
     def _search(self, request, type):
-        model = helpers._registered_types[type].model
-
         # parse search query
-        import pdb; pdb.set_trace()
         query_q = self._parse_search_query(self.args['query'])
-        search_results = model.objects.filter(query_q)
+        search_results = self.api.objects.filter(query_q)
         return list(search_results[:100])
 
 
@@ -122,7 +119,7 @@ class InstanceMethodView(EcoApiTypeBaseView):
 
         # check if object exists
         try:
-            self.obj = self.model.objects.get(id=id)
+            self.obj = self.api.objects.get(id=id)
         except model.DoesNotExist:
             return rc.NOT_FOUND
 
