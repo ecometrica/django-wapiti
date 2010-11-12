@@ -8,7 +8,7 @@ urlpatterns = patterns('ecoapi.views',
         (r'^(?P<ver>[.0-9]+)/?$', InterfaceView.as_view()),
         (r'^(?P<ver>[.0-9]+)/(?P<type>[a-zA-Z0-9_]+)/search/?$', 
          SearchView.as_view()),
-        (r'^(?P<ver>[.0-9]+)/(?P<type>[a-zA-Z0-9_]+)/search/?$', 
+        (r'^(?P<ver>[.0-9]+)/(?P<type>[a-zA-Z0-9_]+)/auto_complete/?$', 
          AutoCompleteView.as_view()),
         (r'^(?P<ver>[.0-9]+)/(?P<type>[a-zA-Z0-9_]+)'
          r'/(?P<id_or_method>[a-zA-Z0-9_]+)/?$', 

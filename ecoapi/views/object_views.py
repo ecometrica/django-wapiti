@@ -96,6 +96,25 @@ class SearchView(EcoApiTypeBaseView):
             return q
 
 
+class AutoCompleteView(EcoApiTypeBaseView):
+    def get(self, request, ver, type, *args, **kwargs):
+        
+        return self._auto_complete(request, type)
+    
+    def _auto_complete(self, request, type):
+        search_str = self.args['partial']
+        if not search_str:
+            return []
+
+        
+        search_q = Q()
+        for f in self.api.auto_complete_fields:
+            search_d = {'%s__%s' % (f, self.api.auto_complete_type): search_str}
+            search_q |= Q(**search_d)
+        results = self.api.objects.filter(search_q)
+        results = results.order_by(self.api.auto_complete_order_by)
+        return list(results)
+
 
 
 class InstanceMethodView(EcoApiTypeBaseView):
