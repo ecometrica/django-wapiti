@@ -12,9 +12,9 @@ from django.template import RequestContext, loader
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import update_wrapper
 
-from ecoapi import helpers
-from ecoapi.models import APIKey
-from ecoapi.parsers import Decoder, Encoder
+from wapiti import helpers
+from wapiti.models import APIKey
+from wapiti.parsers import Decoder, Encoder
 
 class classonlymethod(classmethod):
     def __get__(self, instance, owner):
@@ -89,7 +89,7 @@ class View(object):
         )
         return http.HttpResponseNotAllowed(allowed_methods)
 
-class EcoApiBaseView(View):
+class wapitiBaseView(View):
     def dispatch(self, request, *args, **kwargs):
         # always check API Key permissions
         self.args = {}
@@ -120,12 +120,12 @@ class EcoApiBaseView(View):
         for k, v in self.args.iteritems():
             self.args[k] = self._decoder.decode(v)
 
-        resp = super(EcoApiBaseView, self).dispatch(request, *args, **kwargs)
+        resp = super(wapitiBaseView, self).dispatch(request, *args, **kwargs)
         if not isinstance(resp, HttpResponse):
             resp = Encoder(self.format).encode(resp)
         return HttpResponse(resp, mimetype="application/%s"%self.format)
 
-class EcoApi404View(View):
+class wapiti404View(View):
     def get(self, request):
         return rc.NOT_FOUND
     

@@ -1,6 +1,6 @@
 import unittest
 
-from ecoapi.parsers import Decoder, Encoder
+from wapiti.parsers import Decoder, Encoder
 
 class TestJSONDecode(unittest.TestCase):
 

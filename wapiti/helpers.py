@@ -4,7 +4,7 @@ from functools import wraps
 from django.db.models import get_apps
 from piston.utils import rc
 
-from ecoapi.conf import ID_RE
+from wapiti.conf import ID_RE
 
 _RegisteredType = namedtuple('RegisteredType', ('model', 'api'))
 

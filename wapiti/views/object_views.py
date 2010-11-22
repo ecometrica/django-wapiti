@@ -4,11 +4,11 @@ from piston.utils import rc
 
 from django.db.models import Q
 
-from ecoapi import helpers
-from ecoapi import handlers
-from ecoapi.views.base_view import EcoApiBaseView
+from wapiti import helpers
+from wapiti import handlers
+from wapiti.views.base_view import wapitiBaseView
 
-class EcoApiTypeBaseView(EcoApiBaseView):
+class wapitiTypeBaseView(wapitiBaseView):
     def dispatch(self, request, ver, type, *args, **kwargs):
         # check if type is registered barf if not
         try:
@@ -16,9 +16,9 @@ class EcoApiTypeBaseView(EcoApiBaseView):
             self.api = helpers._registered_types[type].api
         except KeyError:
             return rc.NOT_FOUND
-        return super(EcoApiTypeBaseView, self).dispatch(request, ver, type, *args, **kwargs)
+        return super(wapitiTypeBaseView, self).dispatch(request, ver, type, *args, **kwargs)
 
-class ObjectOrClassMethodView(EcoApiTypeBaseView):
+class ObjectOrClassMethodView(wapitiTypeBaseView):
     def get(self, request, ver, type, id_or_method, *args, **kwargs):
         
         # determine if id_or_method is an id, call object_view if so
@@ -55,7 +55,7 @@ class ObjectOrClassMethodView(EcoApiTypeBaseView):
 
         return m(**self.args)
 
-class SearchView(EcoApiTypeBaseView):
+class SearchView(wapitiTypeBaseView):
         
     _CONDITIONS = {'not': '__invert__', 'and': '__and__', 'or': '__or__'}
 
@@ -93,7 +93,7 @@ class SearchView(EcoApiTypeBaseView):
             return q
 
 
-class AutoCompleteView(EcoApiTypeBaseView):
+class AutoCompleteView(wapitiTypeBaseView):
     def get(self, request, ver, type, *args, **kwargs):
         
         return self._auto_complete(request, type)
@@ -114,7 +114,7 @@ class AutoCompleteView(EcoApiTypeBaseView):
 
 
 
-class InstanceMethodView(EcoApiTypeBaseView):
+class InstanceMethodView(wapitiTypeBaseView):
     def get(self, request, ver, type, id, method):
 
         # check if object exists

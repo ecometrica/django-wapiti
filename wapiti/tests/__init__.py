@@ -1,5 +1,5 @@
 # run with
-# DJANGO_SETTINGS_MODULE=ecoapi.settings python tests/__init__.py
+# DJANGO_SETTINGS_MODULE=wapiti.settings python tests/__init__.py
 
 from test_parsers import *
 

@@ -1,12 +1,12 @@
 from piston.utils import rc
 
-from ecoapi.views.base_view import EcoApiBaseView
+from wapiti.views.base_view import wapitiBaseView
 
-class TopLevelInterfaceView(EcoApiBaseView):
+class TopLevelInterfaceView(wapitiBaseView):
     def get(self, request):
         return rc.NOT_IMPLEMENTED
 
-class InterfaceView(EcoApiBaseView):
+class InterfaceView(wapitiBaseView):
     def get(self, request, ver):
         return rc.NOT_IMPLEMENTED
 

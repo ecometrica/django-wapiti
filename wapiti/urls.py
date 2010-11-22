@@ -1,9 +1,9 @@
 from django.conf.urls.defaults import *
 
-from ecoapi.views import *
+from wapiti.views import *
 
 
-urlpatterns = patterns('ecoapi.views',
+urlpatterns = patterns('wapiti.views',
         (r'^/?$', TopLevelInterfaceView.as_view()),
         (r'^(?P<ver>[.0-9]+)/?$', InterfaceView.as_view()),
         (r'^(?P<ver>[.0-9]+)/(?P<type>[a-zA-Z0-9_]+)/search/?$', 
@@ -16,6 +16,6 @@ urlpatterns = patterns('ecoapi.views',
         (r'^(?P<ver>[.0-9]+)/(?P<type>[a-zA-Z0-9_]+)/'
          r'(?P<id>[a-zA-Z0-9_]+)/(?P<method>[a-zA-Z0-9_]+)/?$', 
          InstanceMethodView.as_view()),
-        (r'.*', EcoApi404View.as_view()),
+        (r'.*', wapiti404View.as_view()),
 )
 

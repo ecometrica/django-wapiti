@@ -5,7 +5,7 @@ import re
 from django.db import models
 from django.db.models.query import QuerySet
 
-from ecoapi import helpers
+from wapiti import helpers
 
 # ISO 8601
 DATE_RE = re.compile('[0-9]{4}-[0-1]?[0-9]-[1-3]?[0-9]')

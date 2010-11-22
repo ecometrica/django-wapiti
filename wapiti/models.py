@@ -4,7 +4,7 @@ import re
 from django.core.cache import cache
 from django.db import models
 
-from ecoapi.conf import APIKEY_ALLOWABLE_LETTERS, APIKEY_LENGTH
+from wapiti.conf import APIKEY_ALLOWABLE_LETTERS, APIKEY_LENGTH
 
 METHODS = ('GET', 'POST', 'PUT', 'DELETE')
 
