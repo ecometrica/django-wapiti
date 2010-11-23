@@ -1,3 +1,5 @@
+# Copyright (c) Ecometrica. All rights reserved.
+# Distributed under the BSD license. See LICENSE for details.
 from piston.handler import AnonymousBaseHandler
 from piston.resource import Resource
 from piston.utils import rc

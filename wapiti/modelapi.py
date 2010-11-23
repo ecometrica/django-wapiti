@@ -1,3 +1,5 @@
+# Copyright (c) Ecometrica. All rights reserved.
+# Distributed under the BSD license. See LICENSE for details.
 class ModelApi(object):
     # mode this api type is tied to, if any
     model = None

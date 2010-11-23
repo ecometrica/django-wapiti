@@ -1,3 +1,5 @@
+# Copyright (c) Ecometrica. All rights reserved.
+# Distributed under the BSD license. See LICENSE for details.
 import unittest
 
 from wapiti.parsers import Decoder, Encoder

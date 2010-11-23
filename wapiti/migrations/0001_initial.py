@@ -1,3 +1,5 @@
+# Copyright (c) Ecometrica. All rights reserved.
+# Distributed under the BSD license. See LICENSE for details.
 # encoding: utf-8
 import datetime
 from south.db import db
