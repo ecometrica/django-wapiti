@@ -91,7 +91,7 @@ class View(object):
         )
         return http.HttpResponseNotAllowed(allowed_methods)
 
-class wapitiBaseView(View):
+class WapitiBaseView(View):
     def dispatch(self, request, *args, **kwargs):
         # always check API Key permissions
         self.args = {}
@@ -122,12 +122,12 @@ class wapitiBaseView(View):
         for k, v in self.args.iteritems():
             self.args[k] = self._decoder.decode(v)
 
-        resp = super(wapitiBaseView, self).dispatch(request, *args, **kwargs)
+        resp = super(WapitiBaseView, self).dispatch(request, *args, **kwargs)
         if not isinstance(resp, HttpResponse):
             resp = Encoder(self.format).encode(resp)
         return HttpResponse(resp, mimetype="application/%s"%self.format)
 
-class wapiti404View(View):
+class Wapiti404View(View):
     def get(self, request):
         return rc.NOT_FOUND
     

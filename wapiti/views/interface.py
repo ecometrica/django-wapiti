@@ -2,13 +2,13 @@
 # Distributed under the BSD license. See LICENSE for details.
 from piston.utils import rc
 
-from wapiti.views.base_view import wapitiBaseView
+from wapiti.views.base_view import WapitiBaseView
 
-class TopLevelInterfaceView(wapitiBaseView):
+class TopLevelInterfaceView(WapitiBaseView):
     def get(self, request):
         return rc.NOT_IMPLEMENTED
 
-class InterfaceView(wapitiBaseView):
+class InterfaceView(WapitiBaseView):
     def get(self, request, ver):
         return rc.NOT_IMPLEMENTED
 

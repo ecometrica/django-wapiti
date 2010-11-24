@@ -8,9 +8,9 @@ from django.db.models import Q
 
 from wapiti import helpers
 from wapiti import handlers
-from wapiti.views.base_view import wapitiBaseView
+from wapiti.views.base_view import WapitiBaseView
 
-class wapitiTypeBaseView(wapitiBaseView):
+class WapitiTypeBaseView(WapitiBaseView):
     def dispatch(self, request, ver, type, *args, **kwargs):
         # check if type is registered barf if not
         try:
@@ -18,9 +18,9 @@ class wapitiTypeBaseView(wapitiBaseView):
             self.api = helpers._registered_types[type].api
         except KeyError:
             return rc.NOT_FOUND
-        return super(wapitiTypeBaseView, self).dispatch(request, ver, type, *args, **kwargs)
+        return super(WapitiTypeBaseView, self).dispatch(request, ver, type, *args, **kwargs)
 
-class ObjectOrClassMethodView(wapitiTypeBaseView):
+class ObjectOrClassMethodView(WapitiTypeBaseView):
     def get(self, request, ver, type, id_or_method, *args, **kwargs):
         
         # determine if id_or_method is an id, call object_view if so
@@ -57,7 +57,7 @@ class ObjectOrClassMethodView(wapitiTypeBaseView):
 
         return m(**self.args)
 
-class SearchView(wapitiTypeBaseView):
+class SearchView(WapitiTypeBaseView):
         
     _CONDITIONS = {'not': '__invert__', 'and': '__and__', 'or': '__or__'}
 
@@ -95,7 +95,7 @@ class SearchView(wapitiTypeBaseView):
             return q
 
 
-class AutoCompleteView(wapitiTypeBaseView):
+class AutoCompleteView(WapitiTypeBaseView):
     def get(self, request, ver, type, *args, **kwargs):
         
         return self._auto_complete(request, type)
@@ -116,7 +116,7 @@ class AutoCompleteView(wapitiTypeBaseView):
 
 
 
-class InstanceMethodView(wapitiTypeBaseView):
+class InstanceMethodView(WapitiTypeBaseView):
     def get(self, request, ver, type, id, method):
 
         # check if object exists
