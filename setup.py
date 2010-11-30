@@ -1,3 +1,6 @@
+# Copyright (c) Ecometrica. All rights reserved.
+# Distributed under the BSD license. See LICENSE for details.
+
 from setuptools import setup, find_packages
 setup(
     name = "django-wapiti",
