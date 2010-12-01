@@ -3,10 +3,12 @@
 import copy
 import json
 import inspect
+import traceback
 
 from piston.utils import rc
 
 from django import http
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.http import HttpResponse
@@ -17,6 +19,77 @@ from django.utils.functional import update_wrapper
 from wapiti import helpers
 from wapiti.models import APIKey
 from wapiti.parsers import Decoder, Encoder
+
+SUPPORTED_FORMATS = ('json', )
+
+class APIBaseException(Exception):
+    def __init__(self, msg='', code=500):
+        self.msg, self.code = msg, code
+
+    def __unicode__(self):
+        return u"%d %s" % (self.code, self.msg)
+    
+    def get_resp(self):
+        resp = HttpResponse(content=self.msg, status=self.code)
+        return resp
+
+
+class APIForbidden(APIBaseException):
+    def __init__(self, msg=''):
+        super(APIForbidden, self).__init__(msg, 403)
+
+    def __unicode__(self):
+        return u"%d You can't do that!: %s" % (self.code, self.msg)
+
+class APIMissingParameter(APIBaseException):
+    def __init__(self, msg='', parameter='', all_parameters=()):
+        super(APIMissingParameter, self).__init__(msg, 400)
+        self.msg += "\nParameter missing: " + parameter
+        if all_parameters:
+            self.msg = (self.msg + "\nRequired parameters: " 
+                        + ' '.join(all_parameters))
+
+    def __unicode__(self):
+        return u"%d You forgot one!: %s" % (self.code, self.msg)
+
+class APIServerError(APIBaseException):
+    def __init__(self, msg=''):
+        super(APIServerError, self).__init__(msg, 500)
+        if settings.DEBUG:
+            self.msg += "\nTraceback:\n " + traceback.format_exc()
+
+    def __unicode__(self):
+        return u"%d Looks like we screwed up: %s" % (self.code, self.msg)
+
+class APIFormatNotSupported(APIBaseException):
+    def __init__(self, msg='', format=''):
+        super(APIFormatNotSupported, self).__init__(msg, 406)
+        self.msg += " Format %s not in supported formats (%s)" % (
+            format, ', '.join(SUPPORTED_FORMATS)
+        )
+
+    def __unicode__(self):
+        return u"%d Lost in translation: %s" % (self.code, self.msg)
+
+class APICantGrokParameter(APIBaseException):
+    def __init__(self, msg='', parameter='', value=''):
+        super(APICantGrokParameter, self).__init__(msg, 400)
+        self.msg += " I can't decode parameter %s=%s" % (parameter, value)
+        if settings.DEBUG:
+            self.msg += "\nTraceback:\n " + traceback.format_exc()
+
+    def __unicode__(self):
+        return u"%d Can't grok: %s" % (self.code, self.msg)
+
+class APIMethodNotAllowed(APIBaseException):
+    def __init__(self, msg='', method='', allowed=()):
+        super(APIMethodNotAllowed, self).__init__(msg, 405)
+        self.msg = (self.msg + u" Method %s is not allowed." % method)
+        if allowed:
+            self.msg = self.msg + " Allowed methods are: " + ', '.join(allowed)
+
+    def __unicode__(self):
+        return u"%d I can't be used that way: %s" % (self.code, self.msg)
 
 class classonlymethod(classmethod):
     def __get__(self, instance, owner):
@@ -31,7 +104,8 @@ class View(object):
     """
     # adapted from django 1.3's base class view
 
-    http_method_names = ['get', 'post', 'put', 'delete', 'head', 'options', 'trace']
+    http_method_names = ['get', 'post', 'put', 'delete', 'head', 'options', 
+                         'trace']
 
     def __init__(self, **kwargs):
         """
@@ -75,21 +149,18 @@ class View(object):
         # defer to the error handler. Also defer to the error handler if the
         # request method isn't on the approved list.
         if request.method.lower() in self.http_method_names:
-            handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
+            handler = getattr(self, request.method.lower(), 
+                              self.http_method_not_allowed)
         else:
             handler = self.http_method_not_allowed
         self.request = request
         return handler(request, *args, **kwargs)
 
     def http_method_not_allowed(self, request, *args, **kwargs):
-        allowed_methods = [m for m in self.http_method_names if hasattr(self, m)]
-        sys.stderr.write('Method Not Allowed (%s): %s\n' % (request.method, request.path),
-            extra={
-                'status_code': 405,
-                'request': self.request
-            }
-        )
-        return http.HttpResponseNotAllowed(allowed_methods)
+        allowed_methods = [m for m in self.http_method_names 
+                           if hasattr(self, m)]
+        return APIMethodNotAllowed(method=request.method, 
+                                   allowed=allowed_methods).get_resp()
 
 class WapitiBaseView(View):
     def dispatch(self, request, *args, **kwargs):
@@ -111,20 +182,35 @@ class WapitiBaseView(View):
             authorized = apikey.is_authorized(request)
 
         if not authorized:
-            resp = rc.FORBIDDEN
-            resp.write(" Invalid API key")
-            return resp
+            return APIForbidden("Invalid API Key").get_resp()
 
         self.format = self.args.pop('format', 'json')
+        if self.format not in SUPPORTED_FORMATS:
+            return APIFormatNotSupported(format=self.format).get_resp()
         
         # parse the arguments
         self._decoder = Decoder(self.format)
         for k, v in self.args.iteritems():
-            self.args[k] = self._decoder.decode(v)
+            try:
+                self.args[k] = self._decoder.decode(v)
+            except:
+                return APICantGrokParameter(k, v).get_resp()
 
-        resp = super(WapitiBaseView, self).dispatch(request, *args, **kwargs)
+        try:
+            resp = super(WapitiBaseView, self).dispatch(request, *args, 
+                                                        **kwargs)
+        except APIBaseException, e:
+            return e
+        except Exception, e:
+            return APIServerError("Unknown error processing request: " + 
+                                  e.__unicode__()).get_resp()
+
         if not isinstance(resp, HttpResponse):
-            resp = Encoder(self.format).encode(resp)
+            try:
+                resp = Encoder(self.format).encode(resp)
+            except:
+                return APIServerError(u"Error encoding the results!").get_resp()
+
         return HttpResponse(resp, mimetype="application/%s"%self.format)
 
 class Wapiti404View(View):
