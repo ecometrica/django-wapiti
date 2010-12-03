@@ -60,7 +60,7 @@ class Encoder(object):
     def convert(self, value):
         # recursively encode objects and dates
 
-        if isinstance(value, (list, QuerySet, tuple)):
+        if isinstance(value, (list, QuerySet, tuple, set)):
             value = [self.convert(i) for i in value]
         elif isinstance(value, models.Model):
             value = self.object_to_dict(value)
