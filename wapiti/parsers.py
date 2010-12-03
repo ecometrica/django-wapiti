@@ -10,7 +10,7 @@ from django.db.models.query import QuerySet
 from wapiti import helpers
 
 # ISO 8601
-DATE_RE = re.compile('[0-9]{4}-[0-1]?[0-9]-[1-3]?[0-9]')
+DATE_RE = re.compile('([0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9])')
 DATE_FORMAT = '%Y-%m-%d'
  
 class EcoJSONDecoder(json.JSONDecoder):
@@ -26,6 +26,8 @@ class Decoder(object):
         self.decode = getattr(self, format)
 
     def json(self, value):
+        #FIXME detect dates and turn to string
+        value = DATE_RE.subn(r'"\1"', value)[0]
         _decoded = json.loads(value, 'UTF-8', EcoJSONDecoder)
         _parsed = self.convert(_decoded)
         return _parsed
