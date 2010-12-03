@@ -41,7 +41,7 @@ class Decoder(object):
             if 'type' in value:
                 value = self.dict_to_object(value)
         elif isinstance(value, (str, unicode)) and DATE_RE.match(value):
-            value = dt.datetime.strptime(DATE_FORMAT).date()
+            value = dt.datetime.strptime(value, DATE_FORMAT).date()
         return value
 
     def dict_to_object(self, value):
