@@ -85,6 +85,6 @@ class Encoder(object):
 
         obj_dict = {'type': type_name, 'id': value.id, 'str': api_str}
         for f in api.object_repr_fields:
-            abj_dict[f] = eval('value.' + f)
+            obj_dict[f] = eval('value.' + f)
         return obj_dict
 
