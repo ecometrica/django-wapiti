@@ -1,6 +1,7 @@
 # Copyright (c) Ecometrica. All rights reserved.
 # Distributed under the BSD license. See LICENSE for details.
 import datetime as dt
+from decimal import Decimal
 import json
 import re
 
@@ -71,6 +72,8 @@ class Encoder(object):
                 value[k] = self.convert(v)
         elif isinstance(value, dt.date):
             value = value.strftime(DATE_FORMAT)
+        elif isinstance(value, Decimal):
+            value = float(value)
 
         return value
 
