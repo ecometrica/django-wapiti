@@ -122,7 +122,7 @@ class InstanceMethodView(WapitiTypeBaseView):
         # check if object exists
         try:
             self.obj = self.api.objects.get(id=id)
-        except model.DoesNotExist:
+        except self.model.DoesNotExist:
             return rc.NOT_FOUND
 
         # check if method exists
