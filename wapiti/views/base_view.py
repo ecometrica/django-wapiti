@@ -172,6 +172,7 @@ class WapitiBaseView(View):
             self.args[k] = v
 
         self.api_key = self.args.pop('k', None)
+        self.jsonp = self.args.pop('jsonp', None)
 
         authorized = True
         try:
@@ -210,6 +211,8 @@ class WapitiBaseView(View):
                 resp = Encoder(self.format).encode(resp)
             except:
                 return APIServerError(u"Error encoding the results!").get_resp()
+            if self.jsonp:
+                resp = u'%s(%s)'%(self.jsonp, resp)
 
         return HttpResponse(resp, mimetype="application/%s"%self.format)
 
