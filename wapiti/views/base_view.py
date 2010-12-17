@@ -172,7 +172,7 @@ class WapitiBaseView(View):
             self.args[k] = v
 
         self.api_key = self.args.pop('k', None)
-        self.jsonp = self.args.pop('jsonp', None)
+        self.jsonp = self.args.pop('callback', None)
 
         authorized = True
         try:
