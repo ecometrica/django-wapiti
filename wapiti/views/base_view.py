@@ -3,6 +3,7 @@
 import copy
 import json
 import inspect
+import re
 import traceback
 
 from piston.utils import rc
@@ -21,6 +22,9 @@ from wapiti.models import APIKey
 from wapiti.parsers import Decoder, Encoder
 
 SUPPORTED_FORMATS = ('json', )
+FORMAT_CONTENT_TYPES = {
+    'json': 'application/json'
+}
 
 class APIBaseException(Exception):
     def __init__(self, msg='', code=500):
@@ -189,7 +193,7 @@ class WapitiBaseView(View):
         if self.format not in SUPPORTED_FORMATS:
             return APIFormatNotSupported(format=self.format).get_resp()
         
-        # parse the arguments
+        # parse the arguments        
         self._decoder = Decoder(self.format)
         for k, v in self.args.iteritems():
             try:
@@ -198,7 +202,7 @@ class WapitiBaseView(View):
                 return APICantGrokParameter(k, v).get_resp()
 
         try:
-            resp = super(WapitiBaseView, self).dispatch(request, *args, 
+            result = super(WapitiBaseView, self).dispatch(request, *args, 
                                                         **kwargs)
         except APIBaseException, e:
             return e
@@ -206,15 +210,22 @@ class WapitiBaseView(View):
             return APIServerError("Unknown error processing request: " + 
                                   e.__unicode__()).get_resp()
 
-        if not isinstance(resp, HttpResponse):
-            try:
-                resp = Encoder(self.format).encode(resp)
-            except:
-                return APIServerError(u"Error encoding the results!").get_resp()
-            if self.jsonp:
-                resp = u'%s(%s)'%(self.jsonp, resp)
-
-        return HttpResponse(resp, mimetype="application/%s"%self.format)
+        if isinstance(result, HttpResponse):
+            return result
+            
+        try:
+            result = Encoder(self.format).encode(result)
+        except:
+            return APIServerError(u"Error encoding the results!").get_resp()
+        if self.jsonp:
+            jsonp = re.sub(r'[^a-zA-Z0-9_]', '', self.jsonp) # sanitize against xss
+            resp = HttpResponse((jsonp, '(', result, ')'))
+        else:
+            resp = HttpResponse(result)
+            
+        resp['Content-Type'] = FORMAT_CONTENT_TYPES[self.format] + \
+            '; charset=utf-8'
+        return resp
 
 class Wapiti404View(View):
     def get(self, request):
