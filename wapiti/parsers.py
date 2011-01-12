@@ -85,6 +85,8 @@ class Encoder(object):
             value = value.strftime(DATE_FORMAT)
         elif isinstance(value, Decimal):
             value = float(value)
+        elif hasattr(value, 'to_wapiti'):
+            value = self.convert(value.to_wapiti())
 
         return value
 
