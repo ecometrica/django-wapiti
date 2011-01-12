@@ -18,6 +18,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import update_wrapper
 
 from wapiti import helpers
+from wapiti.conf import ANONYMOUS_API_KEY
 from wapiti.models import APIKey
 from wapiti.parsers import Decoder, Encoder
 
@@ -175,7 +176,7 @@ class WapitiBaseView(View):
         for k, v in request.POST.iteritems():
             self.args[k] = v
 
-        self.api_key = self.args.pop('k', None)
+        self.api_key = self.args.pop('k', ANONYMOUS_API_KEY)
         self.jsonp = self.args.pop('callback', None)
 
         authorized = True
