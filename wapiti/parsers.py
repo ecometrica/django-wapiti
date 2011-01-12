@@ -13,6 +13,9 @@ from wapiti import helpers
 # ISO 8601
 DATE_RE = re.compile('([0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9])')
 DATE_FORMAT = '%Y-%m-%d'
+
+class ModelNotRegisteredError(Exception):
+    pass
  
 class EcoJSONDecoder(json.JSONDecoder):
     def decode(self, s):
@@ -42,13 +45,21 @@ class Decoder(object):
             for k, v in value.iteritems():
                 value[k] = self.convert(v)
             if 'type' in value:
-                value = self.dict_to_object(value)
+                try:
+                    value = self.dict_to_object(value)
+                except ModelNotRegisteredError:
+                    # If we can't convert this dict to a model object,
+                    # keep it as a dict.
+                    pass
         elif isinstance(value, (str, unicode)) and DATE_RE.match(value):
             value = dt.datetime.strptime(value, DATE_FORMAT).date()
         return value
 
     def dict_to_object(self, value):
-        m = helpers._registered_types[value['type']].model
+        try:
+            m = helpers._registered_types[value['type']].model
+        except KeyError:
+            raise ModelNotRegisteredError()
         value.pop('type')
         return m.objects.get(**value)
 
