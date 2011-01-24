@@ -16,9 +16,23 @@ class TopLevelInterfaceView(WapitiBaseView):
 class InterfaceView(WapitiBaseView):
     def get(self, request, ver):
         types = {}
-        base_url = request.build_absolute_uri()
         for name, rt in helpers._registered_types.iteritems():
             methods = {}
+            # FIXME: hardcode generic class methods
+            search_url = reverse('search', kwargs={'ver' : ver, 'type' : name})
+            methods['search'] = {
+                'doc': '',
+                'args': ('query', ),
+                'type': 'class method',
+                'url': search_url,
+            }
+            ac_url = reverse('search', kwargs={'ver' : ver, 'type' : name})
+            methods['auto_complete'] = {
+                'doc': '',
+                'args': ('partial', ),
+                'type': 'class method',
+                'url': ac_url,
+            }
             for m in inspect.getmembers(rt.model):
                 if (inspect.ismethod(m[1])
                     and 'api' in dir(m[1])
