@@ -7,6 +7,7 @@ import re
 
 from django.db import models
 from django.db.models.query import QuerySet
+from django.http import HttpResponse
 
 from wapiti import helpers
 
@@ -14,6 +15,16 @@ from wapiti import helpers
 DATE_RE = re.compile('([0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9])')
 DATE_FORMAT = '%Y-%m-%d'
  
+HTML_STYLE = (
+    """<style type="text/css">
+    td { 
+        border-top: navy solid thin;
+        border-collapse: collapse;
+        #border-right: navy solid thin;
+    }
+    </style>
+    """
+)
 class EcoJSONDecoder(json.JSONDecoder):
     def decode(self, s):
         try:
@@ -32,6 +43,9 @@ class Decoder(object):
         _decoded = json.loads(value, 'UTF-8', EcoJSONDecoder)
         _parsed = self.convert(_decoded)
         return _parsed
+    
+    def html(self, value):
+        return self.json(value)
         
     def convert(self, value):
         # recursively decode objects and dates
@@ -53,12 +67,47 @@ class Decoder(object):
         return m.objects.get(**value)
 
 class Encoder(object):
-    def __init__(self, format):
+    def __init__(self, format, jsonp=None):
         self.format = format
         self.encode = getattr(self, format)
+        self.jsonp = jsonp
 
     def json(self, value):
-        return json.dumps(self.convert(value))
+        resp = json.dumps(self.convert(value))
+        if self.jsonp:
+            resp = u'%s(%s)'%(self.jsonp, resp)
+        return HttpResponse(resp, mimetype='application/json')
+
+    def html(self, value):
+        converted = self.convert(value)
+        return HttpResponse(
+            '<html><head>%(style)s</head><body>%(body)s</body></html>' % {
+                'style': HTML_STYLE,
+                'body': self.to_html(converted)
+            }, 
+            mimetype='text/html'
+        )
+    
+    def to_html(self, value):
+        if isinstance(value, (list, tuple, set)):
+            if not len(value):
+                html = '<em>none</em>'
+            html = ('<table>'
+                    + '\n'.join(['<tr><td>%s</td></tr>' % self.to_html(v)
+                                 for v in value])
+                    + '</table>')
+        elif isinstance(value, dict):
+            html = ('<table>'
+                    + '\n'.join(['<tr><td>%s</td><td>%s</td></tr>' 
+                                 % (self.to_html(k), self.to_html(v))
+                                 for k, v in value.iteritems()])
+                    + '</table>')
+        elif value is None:
+            html = u'<em>None</em>'
+        else:
+            html = (u'%s'%value).replace('\n', '<br/>')
+
+        return html
         
     def convert(self, value):
         # recursively encode objects and dates
