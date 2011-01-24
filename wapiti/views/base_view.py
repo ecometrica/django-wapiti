@@ -3,6 +3,7 @@
 import copy
 import json
 import inspect
+import re
 import traceback
 
 from piston.utils import rc
@@ -17,10 +18,14 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import update_wrapper
 
 from wapiti import helpers
+from wapiti.conf import ANONYMOUS_API_KEY
 from wapiti.models import APIKey
 from wapiti.parsers import Decoder, Encoder
 
 SUPPORTED_FORMATS = ('json', 'html')
+FORMAT_CONTENT_TYPES = {
+    'json': 'application/json'
+}
 
 class APIBaseException(Exception):
     def __init__(self, msg='', code=500):
@@ -171,7 +176,7 @@ class WapitiBaseView(View):
         for k, v in request.POST.iteritems():
             self.args[k] = v
 
-        self.api_key = self.args.pop('k', None)
+        self.api_key = self.args.pop('k', ANONYMOUS_API_KEY)
         self.jsonp = self.args.pop('callback', None)
 
         authorized = True
@@ -189,7 +194,7 @@ class WapitiBaseView(View):
         if self.format not in SUPPORTED_FORMATS:
             return APIFormatNotSupported(format=self.format).get_resp()
         
-        # parse the arguments
+        # parse the arguments        
         self._decoder = Decoder(self.format)
         for k, v in self.args.iteritems():
             try:
@@ -198,7 +203,7 @@ class WapitiBaseView(View):
                 return APICantGrokParameter(k, v).get_resp()
 
         try:
-            resp = super(WapitiBaseView, self).dispatch(request, *args, 
+            result = super(WapitiBaseView, self).dispatch(request, *args, 
                                                         **kwargs)
         except APIBaseException, e:
             return e
