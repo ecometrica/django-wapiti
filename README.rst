@@ -57,6 +57,10 @@ usage
    
     pip install git+http://git@github.com/ecometrica/django-wapiti.git#egg=django-wapiti
 
+#. wapiti requires the decorator module to function::
+   
+    pip install decorator
+
 #. add ``wapiti`` to your INSTALLED_APPS in the settings.py file of your django
    project
 
