@@ -75,6 +75,8 @@ class Decoder(object):
         except KeyError:
             raise ModelNotRegisteredError()
         value.pop('type')
+        if 'str' in value:
+            value.pop('str')
         return m.objects.get(**value)
 
 class Encoder(object):
