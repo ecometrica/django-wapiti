@@ -20,7 +20,7 @@ from wapiti import helpers
 from wapiti.models import APIKey
 from wapiti.parsers import Decoder, Encoder
 
-SUPPORTED_FORMATS = ('json', )
+SUPPORTED_FORMATS = ('json', 'html')
 
 class APIBaseException(Exception):
     def __init__(self, msg='', code=500):
@@ -214,7 +214,7 @@ class WapitiBaseView(View):
             if self.jsonp:
                 resp = u'%s(%s)'%(self.jsonp, resp)
 
-        return HttpResponse(resp, mimetype="application/%s"%self.format)
+        return resp
 
 class Wapiti404View(View):
     def get(self, request):
