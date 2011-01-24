@@ -24,12 +24,13 @@ def register(name, modelapi):
     _registered_types[name] = _RegisteredType(model=modelapi.model, 
                                               api=modelapi)
 
+def _api_method(f, *args, **kwargs):
+    return f(*args, **kwargs)
+
 def api_method(f):
     """Decorator to declare a method api-accessible"""
     f.api = True
-    def wrapper(*args, **kwargs):
-        return f(*args, **kwargs)
-    return decorator(wrapper, f)
+    return decorator(_api_method, f)
 
 def _is_id(id):
     return ID_RE.match(id)
