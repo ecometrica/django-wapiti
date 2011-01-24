@@ -1,6 +1,7 @@
 # Copyright (c) Ecometrica. All rights reserved.
 # Distributed under the BSD license. See LICENSE for details.
 from collections import namedtuple
+from decorator import decorator
 from functools import wraps
 
 from django.db.models import get_apps
@@ -26,10 +27,9 @@ def register(name, modelapi):
 def api_method(f):
     """Decorator to declare a method api-accessible"""
     f.api = True
-    @wraps(f)
     def wrapper(*args, **kwargs):
         return f(*args, **kwargs)
-    return wrapper
+    return decorator(wrapper, f)
 
 def _is_id(id):
     return ID_RE.match(id)
