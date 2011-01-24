@@ -23,9 +23,6 @@ from wapiti.models import APIKey
 from wapiti.parsers import Decoder, Encoder
 
 SUPPORTED_FORMATS = ('json', 'html')
-FORMAT_CONTENT_TYPES = {
-    'json': 'application/json'
-}
 
 class APIBaseException(Exception):
     def __init__(self, msg='', code=500):
@@ -203,7 +200,7 @@ class WapitiBaseView(View):
                 return APICantGrokParameter(k, v).get_resp()
 
         try:
-            result = super(WapitiBaseView, self).dispatch(request, *args, 
+            resp = super(WapitiBaseView, self).dispatch(request, *args, 
                                                         **kwargs)
         except APIBaseException, e:
             return e
@@ -211,13 +208,13 @@ class WapitiBaseView(View):
             return APIServerError("Unknown error processing request: " + 
                                   e.__unicode__()).get_resp()
 
-        if not isinstance(resp, HttpResponse):
-            try:
-                resp = Encoder(self.format).encode(resp)
-            except:
-                return APIServerError(u"Error encoding the results!").get_resp()
-            if self.jsonp:
-                resp = u'%s(%s)'%(self.jsonp, resp)
+        if isinstance(resp, HttpResponse):
+            return resp
+
+        try:
+            resp = Encoder(self.format, jsonp=self.jsonp).encode(resp)
+        except:
+            return APIServerError(u"Error encoding the results!").get_resp()
 
         return resp
 
