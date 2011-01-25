@@ -203,7 +203,7 @@ class WapitiBaseView(View):
             resp = super(WapitiBaseView, self).dispatch(request, *args, 
                                                         **kwargs)
         except APIBaseException, e:
-            return e
+            return e.get_resp()
         except Exception, e:
             return APIServerError("Unknown error processing request: " + 
                                   e.__unicode__()).get_resp()

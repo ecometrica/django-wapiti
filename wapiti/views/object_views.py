@@ -8,7 +8,18 @@ from django.db.models import Q
 
 from wapiti import helpers
 from wapiti import handlers
-from wapiti.views.base_view import WapitiBaseView
+from wapiti.views.base_view import WapitiBaseView, APIBaseException
+
+class APIPoorlyFormedQuery(APIBaseException):
+    def __init__(self, query_str='', msg=''):
+        super(APIPoorlyFormedQuery, self).__init__(msg, 400)
+        self.msg += (
+            "\nMalformed query string (empty, or invalid json): " 
+            + query_str + '\n\n' + SearchView.__doc__
+        )
+
+    def __unicode__(self):
+        return u"%d Incompetent query!: %s" % (self.code, self.msg)
 
 class WapitiTypeBaseView(WapitiBaseView):
     def dispatch(self, request, ver, type, *args, **kwargs):
@@ -83,7 +94,10 @@ class SearchView(WapitiTypeBaseView):
     
     def _search(self, request, type):
         # parse search query
-        query_q = self._parse_search_query(self.args['query'])
+        query = self.args['query']
+        if not query:
+            raise APIPoorlyFormedQuery('')
+        query_q = self._parse_search_query(query)
         search_results = self.api.objects.filter(query_q)
         return list(search_results[:100])
 
