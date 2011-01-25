@@ -8,6 +8,7 @@ from piston.utils import rc
 
 from wapiti import helpers
 from wapiti.views.base_view import WapitiBaseView
+from wapiti.views.object_views import SearchView, AutoCompleteView
 
 class TopLevelInterfaceView(WapitiBaseView):
     def get(self, request):
@@ -21,14 +22,14 @@ class InterfaceView(WapitiBaseView):
             # FIXME: hardcode generic class methods
             search_url = reverse('search', kwargs={'ver' : ver, 'type' : name})
             methods['search'] = {
-                'doc': '',
+                'doc': '<pre>' + SearchView.__doc__ + '</pre>',
                 'args': ('query', ),
                 'type': 'class method',
                 'url': search_url,
             }
             ac_url = reverse('search', kwargs={'ver' : ver, 'type' : name})
             methods['auto_complete'] = {
-                'doc': '',
+                'doc': '<pre>' + AutoCompleteView.__doc__ + '</pre>',
                 'args': ('partial', ),
                 'type': 'class method',
                 'url': ac_url,
@@ -50,8 +51,10 @@ class InterfaceView(WapitiBaseView):
                                               'id' : 'OBJECT_ID',
                                               'method' : m[0]})
 
+                    doc = (m[1].__doc__ and ('<pre>' + m[1].__doc__ + '</pre>')
+                           or '<em>no documentation</em>'),
                     methods[m[0]] = {
-                        'doc': m[1].__doc__,
+                        'doc': doc,
                         'args': m[1].im_func.func_code.co_varnames[1:],
                         'type': method_type,
                         'url': url,
