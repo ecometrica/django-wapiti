@@ -21,6 +21,17 @@ class APIPoorlyFormedQuery(APIBaseException):
     def __unicode__(self):
         return u"%d Incompetent query!: %s" % (self.code, self.msg)
 
+class APIEvilQuery(APIBaseException):
+    def __init__(self, query_str='', msg=''):
+        super(APIEvilQuery, self).__init__(msg, 400)
+        self.msg += (
+            "\nYour query is evil. Following keys is not permitted: " 
+            + query_str + '\n\n' + SearchView.__doc__
+        )
+
+    def __unicode__(self):
+        return u"%d EVIL query!: %s" % (self.code, self.msg)
+
 class WapitiTypeBaseView(WapitiBaseView):
     def dispatch(self, request, ver, type, *args, **kwargs):
         # check if type is registered barf if not
@@ -84,6 +95,7 @@ class SearchView(WapitiTypeBaseView):
         "regex"/"iregex": regular expression case-sensitive/insensitive 
                           string match, 
         "lt"/"gt": less-than, greater-than numerical search
+    You can't follow foreign or reverse keys.
     """
         
     _CONDITIONS = {'not': '__invert__', 'and': '__and__', 'or': '__or__'}
@@ -108,6 +120,8 @@ class SearchView(WapitiTypeBaseView):
 
         elif (isinstance(query, list) and len(query) == 3 
               and all(map(lambda i: isinstance(i, (str, unicode)), query))):
+            if '__' in query[0]:
+                raise APIEvilQuery(' '.join(query))
             return Q(**{'__'.join(query[:2]) : query[2]})
 
         elif isinstance(query, list):
