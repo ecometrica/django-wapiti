@@ -58,6 +58,22 @@ class ObjectOrClassMethodView(WapitiTypeBaseView):
         return m(**self.args)
 
 class SearchView(WapitiTypeBaseView):
+    """
+    Search objects of this type on arbitrarily complex queries
+
+    Query is a list of lists and operators, each list containing the field to 
+    search for, the search type and the search term. Example queries:
+        [['name', 'iexact', 'Long-haul, business']]
+        [['name', 'iexact', 'Long-haul, business'], 
+         or, ['name', 'icontains', 'short-haul']]
+    Supported search types: 
+        "equal"/"iexact": case-sensitive/insensitive full string match 
+                          or "equal" for numerical equality, 
+        "contains"/"icontains": case-sensitive/insensitive substring match, 
+        "regex"/"iregex": regular expression case-sensitive/insensitive 
+                          string match, 
+        "lt"/"gt": less-than, greater-than numerical search
+    """
         
     _CONDITIONS = {'not': '__invert__', 'and': '__and__', 'or': '__or__'}
 
@@ -96,6 +112,12 @@ class SearchView(WapitiTypeBaseView):
 
 
 class AutoCompleteView(WapitiTypeBaseView):
+    """
+    Search suitable for auto-completion of user-entered partial strings
+
+    Partial is a string to be searched for in a case-insensitve fashion. 
+    The fields that will be searched are defined per-type.
+    """
     def get(self, request, ver, type, *args, **kwargs):
         
         return self._auto_complete(request, type)
