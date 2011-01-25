@@ -161,7 +161,14 @@ class AutoCompleteView(WapitiTypeBaseView):
             search_d = {'%s__%s' % (f, self.api.auto_complete_type): search_str}
             search_q |= Q(**search_d)
         results = self.api.objects.filter(search_q)
-        results = results.order_by(self.api.auto_complete_order_by)
+        if self.api.auto_complete_order_by.startswith('LENGTH:'):
+            field_name = self.api.auto_complete_order_by.split(':')[1]
+            results = results.extra(
+                select={'FIELD_LENGTH':'Length(%s)'%field_name})
+            order_by = 'FIELD_LENGTH'
+        else:
+            order_by = self.api.auto_complete_order_by
+        results = results.order_by(order_by)
         return list(results)
 
 
