@@ -85,9 +85,9 @@ class SearchView(WapitiTypeBaseView):
 
     Query is a list of lists and operators, each list containing the field to 
     search for, the search type and the search term. Example queries:
-        [['name', 'iexact', 'Long-haul, business']]
-        [['name', 'iexact', 'Long-haul, business'], 
-         or, ['name', 'icontains', 'short-haul']]
+        [["name", "iexact", "Long-haul, business"]]
+        [["name", "iexact", "Long-haul, business"], 
+         or, ["name", "icontains", "short-haul"]]
     Supported search types: 
         "equal"/"iexact": case-sensitive/insensitive full string match 
                           or "equal" for numerical equality, 
