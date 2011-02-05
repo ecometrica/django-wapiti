@@ -1,5 +1,6 @@
 # Copyright (c) Ecometrica. All rights reserved.
 # Distributed under the BSD license. See LICENSE for details.
+from collections import defaultdict
 import copy
 import json
 import inspect
@@ -167,7 +168,7 @@ class View(object):
 class WapitiBaseView(View):
     def dispatch(self, request, *args, **kwargs):
         # always check API Key permissions
-        self.args = {}
+        self.args = defaultdict(lambda: '')
         for k, v in request.GET.iteritems():
             self.args[k] = v
         for k, v in request.POST.iteritems():
