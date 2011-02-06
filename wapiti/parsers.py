@@ -20,11 +20,56 @@ class ModelNotRegisteredError(Exception):
  
 HTML_STYLE = (
     """<style type="text/css">
-    td { 
-        border-top: navy solid thin;
-        border-collapse: collapse;
-        #border-right: navy solid thin;
+    body {
+        font-family: Helvetica;
+        font-size: 9px;
     }
+
+    table {
+        width: 100%;
+    }
+
+    table tr td {
+        vertical-align: top;
+        padding: 4px;
+        margin: 0px;
+        font-weight: bold;
+    }
+
+    table tr td table {
+        width: 900px;
+        border: none;
+        border-bottom: 1px solid #666;
+    }
+    table tr td table tr td table {
+        width: 700px;
+        border: none;
+        border-top: 1px solid #aaa;
+    }
+    table tr td table tr td {
+        font-weight: normal;
+    }
+
+    table tr td table tr td table tr td {
+        border-bottom: 1px solid #aaa;
+        font-weight: normal;
+    }
+    table tr td table tr td table tr td table {
+        width: 500px;
+        border: none;
+    }
+
+    table tr td table tr td table tr td table tr td table {
+        width: 300px;
+        border: none;
+    }
+    table tr td table tr td table tr td table tr td table tr td {
+        border: none;
+        font-weight: normal;
+        padding: 0px;
+        font-size: 0.8em;
+    }
+
     </style>
     """
 )
