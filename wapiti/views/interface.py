@@ -27,7 +27,8 @@ class InterfaceView(WapitiBaseView):
                 'type': 'class method',
                 'url': search_url,
             }
-            ac_url = reverse('search', kwargs={'ver' : ver, 'type' : name})
+            ac_url = reverse('auto_complete', 
+                             kwargs={'ver' : ver, 'type' : name})
             methods['auto_complete'] = {
                 'doc': '<pre>' + AutoCompleteView.__doc__ + '</pre>',
                 'args': ('partial', ),
