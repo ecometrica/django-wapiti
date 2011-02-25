@@ -19,4 +19,9 @@ class ModelApi(object):
     read_only_fields = []
     # never ever show these fields, whoever asks
     invisible_fields = []
+    # the queryset that will be used for all accesses to these objects
+    # you could create a custom queryset class to allow for an api
+    # type that doesn't map to an actual django type, or simply use this
+    # to filter objects available through the api
+    objects = None
     

@@ -36,11 +36,12 @@ class WapitiTypeBaseView(WapitiBaseView):
     def dispatch(self, request, ver, type, *args, **kwargs):
         # check if type is registered barf if not
         try:
-            self.model = helpers._registered_types[type].model
+            self.model = helpers._registered_types[type].api.model
             self.api = helpers._registered_types[type].api
         except KeyError:
             return rc.NOT_FOUND
-        return super(WapitiTypeBaseView, self).dispatch(request, ver, type, *args, **kwargs)
+        return super(WapitiTypeBaseView, self).dispatch(request, ver, type, 
+                                                        *args, **kwargs)
 
 class ObjectOrClassMethodView(WapitiTypeBaseView):
     def get(self, request, ver, type, id_or_method, *args, **kwargs):

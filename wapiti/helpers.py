@@ -9,7 +9,7 @@ from piston.utils import rc
 
 from wapiti.conf import ID_RE
 
-_RegisteredType = namedtuple('RegisteredType', ('model', 'api'))
+_RegisteredType = namedtuple('RegisteredType', ('api', ))
 
 _registered_types = {}
 
@@ -21,8 +21,7 @@ def register(name, modelapi):
     if not modelapi.objects:
         modelapi.objects = modelapi.model.objects
 
-    _registered_types[name] = _RegisteredType(model=modelapi.model, 
-                                              api=modelapi)
+    _registered_types[name] = _RegisteredType(api=modelapi)
 
 def _api_method(f, *args, **kwargs):
     return f(*args, **kwargs)

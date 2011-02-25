@@ -116,7 +116,7 @@ class Decoder(object):
 
     def dict_to_object(self, value):
         try:
-            m = helpers._registered_types[value['type']].model
+            m = helpers._registered_types[value['type']].api
         except KeyError:
             raise ModelNotRegisteredError()
         value.pop('type')
@@ -189,7 +189,7 @@ class Encoder(object):
 
     def object_to_dict(self, value):
         for k, v in helpers._registered_types.iteritems():
-            if isinstance(value, v.model):
+            if isinstance(value, v.api.model):
                 type_name = k
                 api = v.api
                 break

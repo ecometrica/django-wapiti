@@ -35,7 +35,7 @@ class InterfaceView(WapitiBaseView):
                 'type': 'class method',
                 'url': ac_url,
             }
-            for m in inspect.getmembers(rt.model):
+            for m in inspect.getmembers(rt.api.model):
                 if (inspect.ismethod(m[1])
                     and 'api' in dir(m[1])
                     and m[1].api):
@@ -61,7 +61,7 @@ class InterfaceView(WapitiBaseView):
                         'url': url,
                     }
             types[name] = {
-                'doc': rt.model.__doc__,
+                'doc': rt.api.model.__doc__,
                 'methods': methods,
             }
         return types
