@@ -179,7 +179,7 @@ class WapitiBaseView(View):
 
         authorized = True
         try:
-            apikey = APIKey.objects.get(key=self.api_key)
+            apikey = APIKey.objects.get(key=self.api_key, active=True)
         except APIKey.DoesNotExist:
             authorized = False
         else:
