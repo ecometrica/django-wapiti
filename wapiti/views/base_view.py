@@ -167,6 +167,25 @@ class View(object):
 
 class WapitiBaseView(View):
     def dispatch(self, request, *args, **kwargs):
+        resp = self._dispatch(request, *args, **kwargs)
+
+        if isinstance(resp, HttpResponse):
+            return resp
+        elif isinstance(resp, APIBaseException):
+            e = resp
+            resp = HttpResponse(
+                Encoder(self.format, jsonp=self.jsonp).encode(e.msg)
+            )
+            resp.status_code=e.code
+        else:
+            try:
+                resp = Encoder(self.format, jsonp=self.jsonp).encode(resp)
+            except:
+                return APIServerError(u"Error encoding the results!").get_resp()
+
+        return resp
+
+    def _dispatch(self, request, *args, **kwargs):
         # always check API Key permissions
         self.args = defaultdict(lambda: '')
         for k, v in request.GET.iteritems():
@@ -186,11 +205,11 @@ class WapitiBaseView(View):
             authorized = apikey.is_authorized(request)
 
         if not authorized:
-            return APIForbidden("Invalid API Key").get_resp()
+            return APIForbidden("Invalid API Key")
 
         self.format = self.args.pop('format', 'json')
         if self.format not in SUPPORTED_FORMATS:
-            return APIFormatNotSupported(format=self.format).get_resp()
+            return APIFormatNotSupported(format=self.format)
         
         # parse the arguments        
         self._decoder = Decoder(self.format)
@@ -198,24 +217,16 @@ class WapitiBaseView(View):
             try:
                 self.args[k] = self._decoder.decode(v)
             except:
-                return APICantGrokParameter(k, v).get_resp()
+                return APICantGrokParameter(k, v)
 
         try:
             resp = super(WapitiBaseView, self).dispatch(request, *args, 
                                                         **kwargs)
         except APIBaseException, e:
-            return e.get_resp()
+            return e
         except Exception, e:
             return APIServerError("Unknown error processing request: " + 
-                                  e.__unicode__()).get_resp()
-
-        if isinstance(resp, HttpResponse):
-            return resp
-
-        try:
-            resp = Encoder(self.format, jsonp=self.jsonp).encode(resp)
-        except:
-            return APIServerError(u"Error encoding the results!").get_resp()
+                                  e.__unicode__())
 
         return resp
 
