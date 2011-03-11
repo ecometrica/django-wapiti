@@ -193,6 +193,10 @@ class WapitiBaseView(View):
         for k, v in request.POST.iteritems():
             self.args[k] = v
 
+        self.format = self.args.pop('format', 'json')
+        if self.format not in SUPPORTED_FORMATS:
+            return APIFormatNotSupported(format=self.format)
+        
         self.api_key = self.args.pop('k', ANONYMOUS_API_KEY)
         self.jsonp = self.args.pop('callback', None)
 
@@ -207,10 +211,6 @@ class WapitiBaseView(View):
         if not authorized:
             return APIForbidden("Invalid API Key")
 
-        self.format = self.args.pop('format', 'json')
-        if self.format not in SUPPORTED_FORMATS:
-            return APIFormatNotSupported(format=self.format)
-        
         # parse the arguments        
         self._decoder = Decoder(self.format)
         for k, v in self.args.iteritems():
