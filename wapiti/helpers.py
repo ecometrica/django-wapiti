@@ -18,7 +18,7 @@ def register(name, modelapi):
     global _registered_types
     if modelapi.__name__ in _registered_types:
         return
-    if not modelapi.objects:
+    if not hasattr(modelapi, 'objects'):
         modelapi.objects = modelapi.model.objects
 
     _registered_types[name] = _RegisteredType(api=modelapi)
