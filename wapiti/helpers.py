@@ -3,6 +3,7 @@
 from collections import namedtuple
 from decorator import decorator
 from functools import wraps
+import sys
 
 from django.db.models import get_apps
 from piston.utils import rc
@@ -16,6 +17,8 @@ _registered_types = {}
 def register(name, modelapi):
     """Register a model with the API"""
     global _registered_types
+    if sys.argv[1] in ('syncdb', 'migrate'):
+        return
     if modelapi.__name__ in _registered_types:
         return
     if not modelapi.objects:
