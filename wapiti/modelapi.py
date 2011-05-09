@@ -3,8 +3,6 @@
 class ModelApi(object):
     # mode this api type is tied to, if any
     model = None
-    # the manager - you can override it just for the API
-    objects = None
     # fields that should always be returned when serializing the object
     object_repr_fields = []
     # fields to search into for auto_complete
@@ -23,5 +21,6 @@ class ModelApi(object):
     # you could create a custom queryset class to allow for an api
     # type that doesn't map to an actual django type, or simply use this
     # to filter objects available through the api
-    objects = None
+    # left out so you can hook it up lazily
+    # objects = None
     
