@@ -17,6 +17,10 @@ class ModelApi(object):
     read_only_fields = []
     # never ever show these fields, whoever asks
     invisible_fields = []
+    # fields which can be traversed in search. e.g. to be able to do:
+    # ['foofield__name','icontains','BOO']
+    # you'll need to put 'foofield' in here
+    traversable_fields = []
     # the queryset that will be used for all accesses to these objects
     # you could create a custom queryset class to allow for an api
     # type that doesn't map to an actual django type, or simply use this

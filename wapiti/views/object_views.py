@@ -121,8 +121,10 @@ class SearchView(WapitiTypeBaseView):
 
         elif (isinstance(query, list) and len(query) == 3 
               and all(map(lambda i: isinstance(i, (str, unicode)), query))):
-            if '__' in query[0]:
-                raise APIEvilQuery(' '.join(query))
+            if ('__' in query[0] 
+                and query[0][:query[0].rfind('__')] 
+                not in self.api.traversable_fields):
+                    raise APIEvilQuery(' '.join(query))
             return Q(**{'__'.join(query[:2]) : query[2]})
 
         elif isinstance(query, list):
