@@ -7,15 +7,29 @@ from models import *
 class PermissionInline(admin.TabularInline):
     model = Permission
 
+class LimitInline(admin.TabularInline):
+    model = Limit
+
 class APIKeyAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     inlines = [
         PermissionInline,
+        LimitInline,
     ]
 
 class PermissionAdmin(admin.ModelAdmin):
     pass
 
+class LimitTrackingInline(admin.TabularInline):
+    model = LimitTracking
+
+class LimitAdmin(admin.ModelAdmin):
+    inlines = [
+        LimitTrackingInline,
+    ]
+
 admin.site.register(APIKey, APIKeyAdmin)
 admin.site.register(Permission, PermissionAdmin)
+admin.site.register(Limit, LimitAdmin)
+admin.site.register(LimitTracking)
 

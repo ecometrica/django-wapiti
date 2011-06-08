@@ -44,6 +44,13 @@ class APIForbidden(APIBaseException):
     def __unicode__(self):
         return u"%d You can't do that!: %s" % (self.code, self.msg)
 
+class APIRateLimit(APIBaseException):
+    def __init__(self, msg=''):
+        super(APIRateLimit, self).__init__(msg, 420)
+
+    def __unicode__(self):
+        return u"%d You can't do that!: %s" % (self.code, self.msg)
+
 class APIMissingParameter(APIBaseException):
     def __init__(self, msg='', parameter='', all_parameters=()):
         super(APIMissingParameter, self).__init__(msg, 400)
@@ -207,6 +214,10 @@ class WapitiBaseView(View):
             authorized = False
         else:
             authorized = apikey.is_authorized(request)
+
+        lim = apikey.check_limits(request)
+        if lim != True:
+            return APIRateLimit("Limit exceeded: %s"%lim)
 
         if not authorized:
             return APIForbidden("Invalid API Key")
