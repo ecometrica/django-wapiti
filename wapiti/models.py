@@ -133,10 +133,10 @@ class Limit(models.Model):
             or not self._resource_re.match(request.path)):
             return
 
-        if self.type == 'sessions':
+        if self.type == 'session':
             limit_count, created = self.limittracking_set.get_or_create(
                 session_id=request.session.session_key,
-                key = apikey
+                key=apikey
             )
         elif self.type == 'user':
             if request.user.is_anonymous():
@@ -156,10 +156,13 @@ class LimitTracking(models.Model):
     key = models.ForeignKey('APIKey', null=False)
     limit = models.ForeignKey("Limit", null=False)
     user = models.ForeignKey(User, null=True)
-    session = models.ForeignKey(Session, null=True) # char session_key
+    session_id = models.CharField(max_length=40)
     count = models.IntegerField(default=0, null=False)
     last_update = models.DateTimeField(auto_now=True)
     
+    def __unicode__(self):
+        return u'%s out of %s'%(self.count, self.limit)
+        
     def increment(self):
         """Resets counter based on time, or increments it
         

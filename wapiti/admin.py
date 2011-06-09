@@ -28,8 +28,12 @@ class LimitAdmin(admin.ModelAdmin):
         LimitTrackingInline,
     ]
 
+class LimitTrackingAdmin(admin.ModelAdmin):
+    model = LimitTracking
+    list_display = ('count', 'user', 'session_id', 'last_update', 'limit')
+
 admin.site.register(APIKey, APIKeyAdmin)
 admin.site.register(Permission, PermissionAdmin)
 admin.site.register(Limit, LimitAdmin)
-admin.site.register(LimitTracking)
+admin.site.register(LimitTracking, LimitTrackingAdmin)
 
