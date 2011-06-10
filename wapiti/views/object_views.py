@@ -80,6 +80,16 @@ class ObjectOrClassMethodView(WapitiTypeBaseView):
 
         return m(**self.args)
 
+def _parse_order_by(results, order_by):
+    if order_by.startswith('LENGTH:'):
+        field_name = order_by.split(':')[1]
+        results = results.extra(
+            select={'FIELD_LENGTH':'Length(%s)'%field_name})
+        order_by = 'FIELD_LENGTH'
+    else:
+        order_by = order_by
+    return results.order_by(order_by)
+
 class SearchView(WapitiTypeBaseView):
     """
     Search objects of this type on arbitrarily complex queries
@@ -112,6 +122,7 @@ class SearchView(WapitiTypeBaseView):
             raise APIPoorlyFormedQuery('')
         query_q = self._parse_search_query(query)
         search_results = self.api.objects.filter(query_q)
+        search_results = _parse_order_by(search_results, self.api.order_by)
         return list(search_results[:100])
 
 
@@ -164,14 +175,7 @@ class AutoCompleteView(WapitiTypeBaseView):
             search_d = {'%s__%s' % (f, self.api.auto_complete_type): search_str}
             search_q |= Q(**search_d)
         results = self.api.objects.filter(search_q)
-        if self.api.auto_complete_order_by.startswith('LENGTH:'):
-            field_name = self.api.auto_complete_order_by.split(':')[1]
-            results = results.extra(
-                select={'FIELD_LENGTH':'Length(%s)'%field_name})
-            order_by = 'FIELD_LENGTH'
-        else:
-            order_by = self.api.auto_complete_order_by
-        results = results.order_by(order_by)
+        results = _parse_order_by(results, self.api.order_by)
         return list(results)
 
 

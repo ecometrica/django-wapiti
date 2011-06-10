@@ -9,10 +9,10 @@ class ModelApi(object):
     auto_complete_fields = []
     # auto_complete lookup type
     auto_complete_type = 'icontains'
-    # order auto_complete results by
+    # order auto_complete and search results by
     # this can be 'LENGTH:fieldname' in which case results will be sorted
     # by the length of field fieldname (which should be a string!)
-    auto_complete_order_by = 'id'
+    order_by = 'id'
     # never ever allow modification of these fields, whoever asks
     read_only_fields = []
     # never ever show these fields, whoever asks
