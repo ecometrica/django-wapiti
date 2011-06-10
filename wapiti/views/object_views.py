@@ -132,7 +132,8 @@ class SearchView(WapitiTypeBaseView):
             return Q()
 
         elif (isinstance(query, list) and len(query) == 3 
-              and all(map(lambda i: isinstance(i, (str, unicode)), query))):
+              and all(map(lambda i: isinstance(i, (str, unicode)), query[:2]))):
+            # this is a query atom, such as ["foo","contains","bar"]
             if ('__' in query[0] 
                 and query[0][:query[0].rfind('__')] 
                 not in self.api.traversable_fields):
@@ -140,6 +141,7 @@ class SearchView(WapitiTypeBaseView):
             return Q(**{'__'.join(query[:2]) : query[2]})
 
         elif isinstance(query, list):
+            # query contains atoms and conditions
             q = None
             cond = '__or__'
             for t in query:
