@@ -132,7 +132,8 @@ class SearchView(WapitiTypeBaseView):
             return Q()
 
         elif (isinstance(query, list) and len(query) == 3 
-              and all(map(lambda i: isinstance(i, (str, unicode)), query[:2]))):
+              and isinstance(query[0], (str, unicode))
+              and isinstance(query[1], (str, unicode))):
             # this is a query atom, such as ["foo","contains","bar"]
             if ('__' in query[0] 
                 and query[0][:query[0].rfind('__')] 
