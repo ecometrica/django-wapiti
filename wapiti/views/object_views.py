@@ -123,6 +123,7 @@ class SearchView(WapitiTypeBaseView):
         query_q = self._parse_search_query(query)
         search_results = self.api.objects.filter(query_q)
         search_results = _parse_order_by(search_results, self.api.order_by)
+        search_results = search_results.distinct()
         return list(search_results[:100])
 
 
@@ -176,6 +177,7 @@ class AutoCompleteView(WapitiTypeBaseView):
             search_q |= Q(**search_d)
         results = self.api.objects.filter(search_q)
         results = _parse_order_by(results, self.api.order_by)
+        results = results.distinct()
         return list(results)
 
 
