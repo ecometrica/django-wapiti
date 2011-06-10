@@ -134,21 +134,27 @@ class Limit(models.Model):
             return
 
         if self.type == 'session':
-            limit_count, created = self.limittracking_set.get_or_create(
-                session_id=request.session.session_key,
-                key=apikey
-            )
+            querydict = {'session_id': request.session.session_key,
+                         'key': apikey}
         elif self.type == 'user':
             if request.user.is_anonymous():
                 return True
-            limit_count, created = self.limittracking_set.get_or_create(
-                user=request.user.id,
-                key=apikey
-            )
+            querydict = {'user': request.user.id, 'key': apikey}
         elif self.type == 'key':
+            querydict = {'key': apikey}
+        try:
             limit_count, created = self.limittracking_set.get_or_create(
-                key=apikey
+                **querydict
             )
+        except MultipleObjectsReturned:
+            # because many API requests might come in at the same time,
+            # 2 django processes might call get_or_create at the same time,
+            # and both will therefore create new objects
+            # we take the highest count one, and delete the others
+            limit_count = self.limittracking_set.filter(
+                **querydict
+            ).order_by('-count')[0]
+            self.limittracking_set.exclude(id=limit_count.id).delete()
 
         return limit_count.increment()
 
