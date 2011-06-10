@@ -8,7 +8,7 @@ class ModelApi(object):
     # fields to search into for auto_complete
     auto_complete_fields = []
     # auto_complete lookup type
-    auto_complete_type = 'icontains'
+    auto_complete_type = 'istartswith'
     # order auto_complete and search results by
     # this can be 'LENGTH:fieldname' in which case results will be sorted
     # by the length of field fieldname (which should be a string!)
