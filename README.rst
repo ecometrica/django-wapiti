@@ -27,6 +27,7 @@ Django-wapiti is still under development. What works currently:
 * instance methods are supported: simply decorate the method to make it available
 * class methods are also supported in the same manner
 * API keys
+* limiting requests per-{ip,session,user,apikey} per-{hour,day,month,year,ever}
 
 short-term plan
 ~~~~~~~~~~~~~~~
@@ -106,6 +107,10 @@ usage
    means that to pass a string argument to a method, it needs to be surrounded
    by double-quotes! See the JSON_ spec for details.
 
+#. In order to use per-IP limiting, we need the REMOTE_ADDR variable. If you're
+   using nginx, this needs to be in the proper ``location`` section: ::
+
+    fastcgi_param REMOTE_ADDR $remote_addr;
     
 
 .. _Ecometrica: http://ecometrica.co.uk

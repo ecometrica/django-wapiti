@@ -91,7 +91,13 @@ class Permission(models.Model):
         super(Permission, self).save(*args, **kwargs)
 
 class Limit(models.Model):
-    """A limit on #calls/time period for each user, session, or api key"""
+    """
+    A limit on #calls/time period for each user, session, or api key
+    
+    Ǹote that limits are on an 'order deny, allow' basis: if you set
+    multiple limits that all match a given query, if one of those limits
+    is exceeded, the request 420's. So you can set a high blanket .* limit
+    and then a much more restrictive per-call limit."""
     key = models.ForeignKey('APIKey', null=False)
     resource_regex = models.CharField(max_length=256, blank=False, null=False)
     method = models.CharField(choices=zip(METHODS, METHODS), max_length=8, 
@@ -138,6 +144,10 @@ class Limit(models.Model):
             querydict = {'session_id': request.session.session_key,
                          'key': apikey}
         elif self.type == 'ip':
+            if 'REMOTE_ADDR' not in request.META:
+                l.warning("Can't limit on IP - proxying server doesn't pass "
+                          "REMOTE_ADDR - see wapiti README")
+                return False
             querydict = {'ip': request.META['REMOTE_ADDR'],
                          'key': apikey}
         elif self.type == 'user':
