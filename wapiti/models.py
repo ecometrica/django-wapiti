@@ -99,7 +99,8 @@ class Limit(models.Model):
     type = models.CharField(max_length=8, blank=False, null=False,
                             choices=(('session', 'per session'),
                                      ('user', 'per user'),
-                                     ('key', 'per key')))
+                                     ('key', 'per key'),
+                                     ('ip', 'per ip')))
     period = models.CharField(max_length=8, blank=False, null=False,
                               choices=(('hour', 'per hour'),
                                        ('day', 'per day'),
@@ -136,6 +137,9 @@ class Limit(models.Model):
         if self.type == 'session':
             querydict = {'session_id': request.session.session_key,
                          'key': apikey}
+        elif self.type == 'ip':
+            querydict = {'ip': request.META['REMOTE_ADDR'],
+                         'key': apikey}
         elif self.type == 'user':
             if request.user.is_anonymous():
                 return True
@@ -164,6 +168,7 @@ class LimitTracking(models.Model):
     user = models.ForeignKey(User, null=True)
     session_id = models.CharField(max_length=40)
     count = models.IntegerField(default=0, null=False)
+    ip = models.IPAddressField(blank=True, null=True)
     last_update = models.DateTimeField(auto_now=True)
     
     def __unicode__(self):
