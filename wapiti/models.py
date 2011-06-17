@@ -94,10 +94,11 @@ class Limit(models.Model):
     """
     A limit on #calls/time period for each user, session, or api key
     
-    Ǹote that limits are on an 'order deny, allow' basis: if you set
+    Note that limits are on an 'order deny, allow' basis: if you set
     multiple limits that all match a given query, if one of those limits
     is exceeded, the request 420's. So you can set a high blanket .* limit
-    and then a much more restrictive per-call limit."""
+    and then a much more restrictive per-call limit.
+    """
     key = models.ForeignKey('APIKey', null=False)
     resource_regex = models.CharField(max_length=256, blank=False, null=False)
     method = models.CharField(choices=zip(METHODS, METHODS), max_length=8, 
