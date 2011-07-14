@@ -176,8 +176,8 @@ class Limit(models.Model):
 class LimitTracking(models.Model):
     key = models.ForeignKey('APIKey', null=False)
     limit = models.ForeignKey("Limit", null=False)
-    user = models.ForeignKey(User, null=True)
-    session_id = models.CharField(max_length=40)
+    user = models.ForeignKey(User, null=True, blank=True)
+    session_id = models.CharField(max_length=40, blank=True)
     count = models.IntegerField(default=0, null=False)
     ip = models.IPAddressField(blank=True, null=True)
     last_update = models.DateTimeField(auto_now=True)
