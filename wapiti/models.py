@@ -161,7 +161,7 @@ class Limit(models.Model):
             limit_count, created = self.limittracking_set.get_or_create(
                 **querydict
             )
-        except MultipleObjectsReturned:
+        except LimitTracking.MultipleObjectsReturned:
             # because many API requests might come in at the same time,
             # 2 django processes might call get_or_create at the same time,
             # and both will therefore create new objects
