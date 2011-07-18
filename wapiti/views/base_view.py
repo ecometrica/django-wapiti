@@ -215,7 +215,7 @@ class WapitiBaseView(View):
         else:
             authorized = apikey.is_authorized(request)
 
-        lim = apikey.check_limits(request)
+        lim = api_key.check_limits(request)
         if lim != True:
             return APIRateLimit("Limit exceeded: %s"%lim)
 
