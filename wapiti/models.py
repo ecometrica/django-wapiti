@@ -1,5 +1,7 @@
 # Copyright (c) Ecometrica. All rights reserved.
 # Distributed under the BSD license. See LICENSE for details.
+import base64
+import cPickle as Pickle
 import datetime as dt
 import random
 import re
@@ -201,4 +203,27 @@ class LimitTracking(models.Model):
             return True
         self.count = F('count') + 1
         self.save()
+
+class LogItem(models.Model):
+    """Log all API queries"""
+    apikey = models.ForeignKey('APIKey', null=False)
+    method = models.CharField(choices=zip(METHODS, METHODS), max_length=8, 
+                              null=False, blank=False)
+    resource = models.CharField(max_length=256, blank=False, null=False)
+    pickled_arguments = models.TextField(blank=True)
+
+    @classmethod
+    def log_api_call(self, apikey, request, args):
+        self.objects.create(
+            apikey=apikey,
+            method=request.method,
+            resource=request.path,
+            pickled_arguments=base64.encodestring(Pickle.dumps(args, 2))
+        )
+
+    @property
+    def arguments(self):
+        """Decode and unpickle the arguments back into python"""
+        return Pickle.loads(base64.decodestring(self.pickled_arguments))
+
 

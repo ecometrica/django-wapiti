@@ -20,7 +20,7 @@ from django.utils.functional import update_wrapper
 
 from wapiti import helpers
 from wapiti.conf import ANONYMOUS_API_KEY
-from wapiti.models import APIKey
+from wapiti.models import APIKey, LogItem
 from wapiti.parsers import Decoder, Encoder
 
 SUPPORTED_FORMATS = ('json', 'html')
@@ -238,6 +238,7 @@ class WapitiBaseView(View):
         except Exception, e:
             return APIServerError("Unknown error processing request: " + 
                                   e.__unicode__())
+        LogItem.log_api_call(apikey, request, dict(self.args))
 
         return resp
 
