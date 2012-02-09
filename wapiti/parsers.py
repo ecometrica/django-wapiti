@@ -205,7 +205,7 @@ class Encoder(object):
         except AttributeError:
             api_str = unicode(value)
 
-        obj_dict = {'type': type_name, 'id': value.id, 'str': api_str}
+        obj_dict = {'type': type_name, 'id': value.pk, 'str': api_str}
         for f in api.object_repr_fields:
             obj_dict[f] = eval('value.' + f)
         return obj_dict
