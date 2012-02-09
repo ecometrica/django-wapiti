@@ -6,6 +6,7 @@ import json
 import re
 
 from django.db import models
+from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
 
@@ -126,10 +127,12 @@ class Decoder(object):
         return m.objects.get(**value)
 
 class Encoder(object):
-    def __init__(self, format, jsonp=None):
+    def __init__(self, format, jsonp=None, serialize_all_fields=False):
         self.format = format
         self.encode = getattr(self, format)
         self.jsonp = jsonp
+        self.serialize_all_fields = serialize_all_fields
+        self.max_depth = 1
 
     def to_json(self, value):
         return json.dumps(self.convert(value))
@@ -172,26 +175,45 @@ class Encoder(object):
 
         return html
         
-    def convert(self, value):
+    def convert(self, value, depth=1):
         # recursively encode objects and dates
+        # the depth is used to monitor the recursion depth in the case 
+        # of fields in a model which contain other model objects, such as
+        # a FK. But because after the initial conversion, the encoder
+        # will not encode all the object's fields even if serialize_all_fields
+        # was True on the Encoder, this will only kick in if the ModelApi for 
+        # that model had a FK/M2M/O2M field in its repr_object_fields
 
         if isinstance(value, (list, QuerySet, tuple, set)):
-            value = [self.convert(i) for i in value]
+            value = [self.convert(i, depth) for i in value]
         elif isinstance(value, models.Model):
-            value = self.object_to_dict(value)
+            if (depth == 1 and self.serialize_all_fields 
+                and depth <= self.max_depth):
+                value = self.convert(self.object_to_dict(value, all_fields=True),
+                                     depth + 1)
+            elif depth <= self.max_depth:
+                value = self.convert(self.object_to_dict(value, all_fields=False),
+                                     depth + 1)
+            else:
+                value = self.object_to_dict(value, all_fields=False)
         elif isinstance(value, dict):
             for k, v in value.iteritems():
-                value[k] = self.convert(v)
+                value[k] = self.convert(v, depth)
         elif isinstance(value, dt.date):
             value = value.strftime(DATE_FORMAT)
         elif isinstance(value, Decimal):
             value = float(value)
+        elif isinstance(value, FieldFile):
+            try:
+                value = {'file': value.file}
+            except ValueError:
+                value = {'file': None}
         elif hasattr(value, 'to_wapiti'):
-            value = self.convert(value.to_wapiti())
+            value = self.convert(value.to_wapiti(), depth)
 
         return value
 
-    def object_to_dict(self, value):
+    def object_to_dict(self, value, all_fields=False):
         for k, v in helpers._registered_types.iteritems():
             if isinstance(value, v.api.model):
                 type_name = k
@@ -206,7 +228,12 @@ class Encoder(object):
             api_str = unicode(value)
 
         obj_dict = {'type': type_name, 'id': value.pk, 'str': api_str}
-        for f in api.object_repr_fields:
+        if all_fields:
+            fields = [f.name for f in value._meta.fields]
+        else:
+            fields = api.object_repr_fields
+
+        for f in fields:
             obj_dict[f] = eval('value.' + f)
         return obj_dict
 
