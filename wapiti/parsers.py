@@ -10,6 +10,7 @@ from django.db.models.query import QuerySet
 from django.http import HttpResponse
 
 from wapiti import helpers
+from wapiti.modelapi import ModelApi
 
 # ISO 8601
 DATE_RE = re.compile('([0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9])')
@@ -193,6 +194,9 @@ class Encoder(object):
                 type_name = k
                 api = v.api
                 break
+        else:
+            type_name = value.__class__.__name__
+            api = ModelApi()
         try:
             api_str = value.__api_unicode__()
         except AttributeError:
