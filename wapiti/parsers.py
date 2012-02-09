@@ -131,8 +131,11 @@ class Encoder(object):
         self.encode = getattr(self, format)
         self.jsonp = jsonp
 
+    def to_json(self, value):
+        return json.dumps(self.convert(value))
+
     def json(self, value):
-        resp = json.dumps(self.convert(value))
+        resp = self.to_json(value)
         if self.jsonp:
             jsonp = re.sub(r'[^a-zA-Z0-9_]', '', self.jsonp)
             resp = u'%s(%s)'%(jsonp, resp)
