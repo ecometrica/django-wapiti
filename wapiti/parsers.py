@@ -127,12 +127,32 @@ class Decoder(object):
         return m.objects.get(**value)
 
 class Encoder(object):
-    def __init__(self, format, jsonp=None, serialize_all_fields=False):
+    def __init__(self, format, jsonp=None, serialize_all_fields=False,
+                 file_handler=None, max_depth=1):
+        """
+        Constructor, sets up Encoder behavior
+
+        format: format to output (e.g. json)
+        jsonp: in case the output needs to be wrapped in a jsonp method, give
+               the method name here
+        serialize_all_fields: by default, when encountering an object, the 
+                              serializer will output a dict with the type, id,
+                              repr() and only the fields in the ModelApi's
+                              repr_object_fields list. Set this to true to 
+                              override this and serialize all the fields
+        file_handler: If set to a callable, the encoder will call this for 
+                      outside code to do something with the file for filefields
+                      and its descendants. The arguments will be 
+                      ((field object), (file name), (file location))
+        max_depth: when serialiazing fields pointing to other objects, the
+                   serializer will recurse to at most max_depth depth
+        """
         self.format = format
         self.encode = getattr(self, format)
         self.jsonp = jsonp
         self.serialize_all_fields = serialize_all_fields
-        self.max_depth = 1
+        self.max_depth = max_depth
+        self.file_handler = file_handler
 
     def to_json(self, value):
         return json.dumps(self.convert(value))
@@ -205,7 +225,9 @@ class Encoder(object):
             value = float(value)
         elif isinstance(value, FieldFile):
             try:
-                value = {'file': value.file}
+                if callable(self.file_handler):
+                    self.file_handler(value, value.name, value.path)
+                value = {'file': value.name}
             except ValueError:
                 value = {'file': None}
         elif hasattr(value, 'to_wapiti'):
