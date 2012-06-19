@@ -201,11 +201,11 @@ class WapitiBaseView(View):
             self.args[k] = v
 
         self.format = self.args.pop('format', 'json')
+        self.jsonp = self.args.pop('callback', None)
         if self.format not in SUPPORTED_FORMATS:
             return APIFormatNotSupported(format=self.format)
         
         self.api_key = self.args.pop('k', ANONYMOUS_API_KEY)
-        self.jsonp = self.args.pop('callback', None)
 
         authorized = True
         try:
