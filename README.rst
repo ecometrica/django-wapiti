@@ -65,6 +65,9 @@ usage
 #. add ``wapiti`` to your INSTALLED_APPS in the settings.py file of your django
    project
 
+#. call wapiti.helpers.register_models from somewhere, usually your urls.py, to
+   register your api models and methods
+
 #. to make the model class Foo from the app fooapp available through the API, 
    create a file ``fooapp/api.py`` with this content::
 

@@ -44,4 +44,6 @@ def _register_models():
         except ImportError:
             pass
 
+def register_models():
+    _register_models()
 
