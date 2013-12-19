@@ -1,36 +1,11 @@
 # Copyright (c) Ecometrica. All rights reserved.
 # Distributed under the BSD license. See LICENSE for details.
-from piston.handler import AnonymousBaseHandler
-from piston.resource import Resource
-from piston.utils import rc
 
 from django.db.models import Q
 
 from wapiti import helpers
-from wapiti import handlers
-from wapiti.views.base_view import WapitiBaseView, APIBaseException
-
-class APIPoorlyFormedQuery(APIBaseException):
-    def __init__(self, query_str='', msg=''):
-        super(APIPoorlyFormedQuery, self).__init__(msg, 400)
-        self.msg += (
-            "\nMalformed query string (empty, or invalid json): " 
-            + query_str + '\n\n' + SearchView.__doc__
-        )
-
-    def __unicode__(self):
-        return u"%d Incompetent query!: %s" % (self.code, self.msg)
-
-class APIEvilQuery(APIBaseException):
-    def __init__(self, query_str='', msg=''):
-        super(APIEvilQuery, self).__init__(msg, 400)
-        self.msg += (
-            "\nYour query is evil. Following keys is not permitted: " 
-            + query_str + '\n\n' + SearchView.__doc__
-        )
-
-    def __unicode__(self):
-        return u"%d EVIL query!: %s" % (self.code, self.msg)
+from wapiti.views.base_view import WapitiBaseView
+from wapiti.exceptions import *
 
 class WapitiTypeBaseView(WapitiBaseView):
     def dispatch(self, request, ver, type, *args, **kwargs):
@@ -39,7 +14,7 @@ class WapitiTypeBaseView(WapitiBaseView):
             self.model = helpers._registered_types[type].api.model
             self.api = helpers._registered_types[type].api
         except KeyError:
-            return rc.NOT_FOUND
+            return APINotFound().get_resp()
         return super(WapitiTypeBaseView, self).dispatch(request, ver, type, 
                                                         *args, **kwargs)
 
@@ -54,7 +29,10 @@ class ObjectOrClassMethodView(WapitiTypeBaseView):
             return self._class_method(request, type, id_or_method)
 
     def _object_view(self, request, type, id):
-        return self.model.objects.get(id=id)
+        try:
+            return self.model.objects.get(id=id)
+        except (self.model.DoesNotExist, ValueError):
+            return APINotFound("%s with id %s not found" % (type, id))
 
     def _class_method(self, request, type, method):
 
@@ -65,18 +43,18 @@ class ObjectOrClassMethodView(WapitiTypeBaseView):
             # [a-zA-Z_]
             m = eval('self.model.' + method)
         except AttributeError:
-            return rc.NOT_FOUND
+            return APINotFound("No method %s on type %s" % (method, type))
 
         # check if method is registered with the API
         try:
             if not m.api:
-                return rc.FORBIDDEN
+                return APIForbidden("Method not available through API")
         except AttributeError:
-            return rc.FORBIDDEN
+            return APIForbidden("Method not available through API")
         
         # check if method is a class method
         if m.im_self is not self.model:
-            return rc.NOT_FOUND
+            return APINotFound("Method is an instance method")
 
         return m(**self.args)
 
@@ -192,7 +170,7 @@ class InstanceMethodView(WapitiTypeBaseView):
         try:
             self.obj = self.api.objects.get(id=id)
         except self.model.DoesNotExist:
-            return rc.NOT_FOUND
+            return APINotFound("No such object")
 
         # check if method exists
         try:
@@ -201,18 +179,18 @@ class InstanceMethodView(WapitiTypeBaseView):
             # [a-zA-Z_]
             self.method = eval('self.obj.' + method)
         except AttributeError:
-            return rc.NOT_FOUND
+            return APINotFound("No such method available through the API")
 
         # check if method is registered with the API
         try:
             if not self.method.api:
-                return rc.FORBIDDEN
+                return APIForbidden("Method not available through API")
         except AttributeError:
-            return rc.FORBIDDEN
-        
+            return APIForbidden("Method not available through API")
+
         # check if method is an instance method
         if self.method.im_self is self.model:
-            return rc.NOT_FOUND
+            return APINotFound("Method is a class method")
 
         # create piston handler resource and call it
         return self.method(**self.args)

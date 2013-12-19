@@ -4,15 +4,15 @@ import inspect
 
 from django.core.urlresolvers import reverse
 
-from piston.utils import rc
 
 from wapiti import helpers
+from wapiti.exceptions import *
 from wapiti.views.base_view import WapitiBaseView
 from wapiti.views.object_views import SearchView, AutoCompleteView
 
 class TopLevelInterfaceView(WapitiBaseView):
     def get(self, request):
-        return rc.NOT_IMPLEMENTED
+        return APINotImplemented()
 
 class InterfaceView(WapitiBaseView):
     def get(self, request, ver):

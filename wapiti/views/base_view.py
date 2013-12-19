@@ -1,3 +1,4 @@
+# encoding: utf-8
 # Copyright (c) Ecometrica. All rights reserved.
 # Distributed under the BSD license. See LICENSE for details.
 from collections import defaultdict
@@ -6,9 +7,6 @@ import json
 import inspect
 import re
 import sys
-import traceback
-
-from piston.utils import rc
 
 from django import http
 from django.conf import settings
@@ -22,95 +20,12 @@ from django.utils.functional import update_wrapper
 
 from wapiti import helpers
 from wapiti.conf import ANONYMOUS_API_KEY
+from wapiti.exceptions import *
 from wapiti.models import APIKey, LogItem
 from wapiti.parsers import Decoder, Encoder
 import wapiti.settings as wsettings
 
 SUPPORTED_FORMATS = ('json', 'html')
-
-class APIBaseException(Exception):
-    def __init__(self, msg='', code=500):
-        self.msg, self.code = msg, code
-
-    def __unicode__(self):
-        return u"%d %s" % (self.code, self.msg)
-    
-    def get_resp(self):
-        resp = HttpResponse(content=self.msg, status=self.code)
-        return resp
-
-
-class APIForbidden(APIBaseException):
-    def __init__(self, msg=''):
-        super(APIForbidden, self).__init__(msg, 403)
-
-    def __unicode__(self):
-        return u"%d You can't do that!: %s" % (self.code, self.msg)
-
-class APIRateLimit(APIBaseException):
-    def __init__(self, msg=''):
-        super(APIRateLimit, self).__init__(msg, 420)
-
-    def __unicode__(self):
-        return u"%d You can't do that!: %s" % (self.code, self.msg)
-
-class APIMissingParameter(APIBaseException):
-    def __init__(self, msg='', parameter='', all_parameters=()):
-        super(APIMissingParameter, self).__init__(msg, 400)
-        self.msg += "\nParameter missing: " + parameter
-        if all_parameters:
-            self.msg = (self.msg + "\nRequired parameters: " 
-                        + ' '.join(all_parameters))
-
-    def __unicode__(self):
-        return u"%d You forgot one!: %s" % (self.code, self.msg)
-
-class APIServerError(APIBaseException):
-    def __init__(self, msg=''):
-        super(APIServerError, self).__init__(msg, 500)
-        if settings.DEBUG:
-            self.msg += u"\nTraceback:\n " + traceback.format_exc().encode('utf-8')
-
-    def __unicode__(self):
-        return u"%d Looks like we screwed up: %s" % (self.code, self.msg)
-
-class APIFormatNotSupported(APIBaseException):
-    def __init__(self, msg='', format=''):
-        super(APIFormatNotSupported, self).__init__(msg, 406)
-        self.msg += " Format %s not in supported formats (%s)" % (
-            format, ', '.join(SUPPORTED_FORMATS)
-        )
-
-    def __unicode__(self):
-        return u"%d Lost in translation: %s" % (self.code, self.msg)
-
-class APICantGrokParameter(APIBaseException):
-    def __init__(self, msg='', parameter='', value=''):
-        super(APICantGrokParameter, self).__init__(msg, 400)
-        self.msg += " I can't decode parameter %s=%s" % (parameter, value)
-        if settings.DEBUG:
-            self.msg += "\nTraceback:\n " + traceback.format_exc()
-
-    def __unicode__(self):
-        return u"%d Can't grok: %s" % (self.code, self.msg)
-
-class APIMethodNotAllowed(APIBaseException):
-    def __init__(self, msg='', method='', allowed=()):
-        super(APIMethodNotAllowed, self).__init__(msg, 405)
-        self.msg = (self.msg + u" Method %s is not allowed." % method)
-        if allowed:
-            self.msg = self.msg + " Allowed methods are: " + ', '.join(allowed)
-
-    def __unicode__(self):
-        return u"%d I can't be used that way: %s" % (self.code, self.msg)
-
-class APIBadSlice(APIBaseException):
-    def __init__(self, msg='', method='', allowed=()):
-        super(APIBadSlice, self).__init__(msg, 416)
-        self.msg = (self.msg + u" Bad slicing specification, or too much data requested.")
-
-    def __unicode__(self):
-        return u"%d I can't be used that way: %s" % (self.code, self.msg)
 
 class classonlymethod(classmethod):
     def __get__(self, instance, owner):
@@ -190,11 +105,7 @@ class WapitiBaseView(View):
         if isinstance(resp, HttpResponse):
             return resp
         elif isinstance(resp, APIBaseException):
-            e = resp
-            resp = HttpResponse(
-                Encoder(self.format, jsonp=self.jsonp).encode(e.msg)
-            )
-            resp.status_code=e.code
+            resp = resp.get_resp()
         else:
             if isinstance(resp, (list, tuple, QuerySet)):
                 resp = resp[self.slice_left:self.slice_right]
@@ -276,15 +187,15 @@ class WapitiBaseView(View):
 
 class Wapiti404View(View):
     def get(self, request):
-        return rc.NOT_FOUND
-    
+        return APINotFound().get_resp()
+
     def put(self, request):
-        return rc.NOT_FOUND
-    
+        return APINotFound().get_resp()
+
     def delete(self, request):
-        return rc.NOT_FOUND
-    
+        return APINotFound().get_resp()
+
     def post(self, request):
-        return rc.NOT_FOUND
+        return APINotFound().get_resp()
 
 
