@@ -14,7 +14,7 @@ from wapiti import helpers
 from wapiti.modelapi import ModelApi
 
 # ISO 8601
-DATE_RE = re.compile('([0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9])')
+DATE_RE = re.compile('((?<!")[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9](?!"))')
 DATE_FORMAT = '%Y-%m-%d'
 
 class ModelNotRegisteredError(Exception):
