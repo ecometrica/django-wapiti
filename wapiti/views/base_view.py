@@ -5,6 +5,7 @@ import copy
 import json
 import inspect
 import re
+import sys
 import traceback
 
 from piston.utils import rc
@@ -13,6 +14,7 @@ from django import http
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.template import RequestContext, loader
 from django.utils.translation import ugettext_lazy as _
@@ -22,6 +24,7 @@ from wapiti import helpers
 from wapiti.conf import ANONYMOUS_API_KEY
 from wapiti.models import APIKey, LogItem
 from wapiti.parsers import Decoder, Encoder
+import wapiti.settings as wsettings
 
 SUPPORTED_FORMATS = ('json', 'html')
 
@@ -66,7 +69,7 @@ class APIServerError(APIBaseException):
     def __init__(self, msg=''):
         super(APIServerError, self).__init__(msg, 500)
         if settings.DEBUG:
-            self.msg += "\nTraceback:\n " + traceback.format_exc()
+            self.msg += u"\nTraceback:\n " + traceback.format_exc().encode('utf-8')
 
     def __unicode__(self):
         return u"%d Looks like we screwed up: %s" % (self.code, self.msg)
@@ -97,6 +100,14 @@ class APIMethodNotAllowed(APIBaseException):
         self.msg = (self.msg + u" Method %s is not allowed." % method)
         if allowed:
             self.msg = self.msg + " Allowed methods are: " + ', '.join(allowed)
+
+    def __unicode__(self):
+        return u"%d I can't be used that way: %s" % (self.code, self.msg)
+
+class APIBadSlice(APIBaseException):
+    def __init__(self, msg='', method='', allowed=()):
+        super(APIBadSlice, self).__init__(msg, 416)
+        self.msg = (self.msg + u" Bad slicing specification, or too much data requested.")
 
     def __unicode__(self):
         return u"%d I can't be used that way: %s" % (self.code, self.msg)
@@ -185,8 +196,12 @@ class WapitiBaseView(View):
             )
             resp.status_code=e.code
         else:
+            if isinstance(resp, (list, tuple, QuerySet)):
+                resp = resp[self.slice_left:self.slice_right]
             try:
-                resp = Encoder(self.format, jsonp=self.jsonp).encode(resp)
+                resp = Encoder(self.format, jsonp=self.jsonp,
+                               serialize_all_fields=self.all_fields,
+                               max_depth=self.depth).encode(resp)
             except:
                 return APIServerError(u"Error encoding the results!").get_resp()
 
@@ -202,6 +217,8 @@ class WapitiBaseView(View):
 
         self.format = self.args.pop('format', 'json')
         self.jsonp = self.args.pop('callback', None)
+        self.all_fields = self.args.pop('all_fields', False)
+        self.depth = min(self.args.pop('depth', 1), 5)
         if self.format not in SUPPORTED_FORMATS:
             return APIFormatNotSupported(format=self.format)
         
@@ -221,6 +238,21 @@ class WapitiBaseView(View):
                 return APIRateLimit("Limit exceeded: %s"%lim)
         else:
             return APIForbidden("Invalid API Key")
+
+        # parse slicing arguments, if any
+        self.slice_left = self.args.pop('slice_left', 0)
+        self.slice_right = self.args.pop('slice_right', 100)
+        try:
+            self.slice_left = int(self.slice_left)
+            self.slice_right = int(self.slice_right)
+        except ValueError:
+            return APIBadSlice()
+
+        if (self.slice_left >= self.slice_right
+            or self.slice_left < 0 or self.slice_right < 1
+            or (self.slice_right - self.slice_left) > wsettings.WAPITI_MAX_SLICE_SIZE):
+
+            return APIBadSlice()
 
         # parse the arguments        
         self._decoder = Decoder(self.format)

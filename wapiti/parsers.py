@@ -251,7 +251,7 @@ class Encoder(object):
 
         obj_dict = {'type': type_name, 'id': value.pk, 'str': api_str}
         if all_fields:
-            fields = [f.name for f in value._meta.fields]
+            fields = [f.name for f in value._meta.fields if f.name not in api.invisible_fields]
         else:
             fields = api.object_repr_fields
 

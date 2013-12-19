@@ -28,6 +28,11 @@ Django-wapiti is still under development. What works currently:
 * class methods are also supported in the same manner
 * API keys
 * limiting requests per-{ip,session,user,apikey} per-{hour,day,month,year,ever}
+  per-{http method, object, type, method}
+* slicing of results - add slice_left and slice_right parameters to your request to
+  slice the results
+  * the default max slice size is 100, override with settings.WAPITI_MAX_SLICE_SIZE
+
 
 short-term plan
 ~~~~~~~~~~~~~~~
@@ -38,12 +43,8 @@ soonish:
 * better method for defining the permissions for a given API key
 * user authentication (OAuth or otherwise) and row-level permissions
 * call logging (for quota and throttling enforcement)
-* better handling of querysets and querylists: they are simply cast to a list
-  and the first 100 elements are returned at the momment. A way of slicing into
-  these results, or streaming them, is required instead
-* api introspection: /api/VER/ should return a json (or XML) representation of 
+* api introspection: /api/VER/ should return a json (or XML) representation of
   the currently registered models and calls
-* add project to pypy
 
 known bugs
 ~~~~~~~~~~

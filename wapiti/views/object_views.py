@@ -54,7 +54,7 @@ class ObjectOrClassMethodView(WapitiTypeBaseView):
             return self._class_method(request, type, id_or_method)
 
     def _object_view(self, request, type, id):
-        return rc.NOT_IMPLEMENTED
+        return self.model.objects.get(id=id)
 
     def _class_method(self, request, type, method):
 
@@ -124,7 +124,7 @@ class SearchView(WapitiTypeBaseView):
         search_results = self.api.objects.filter(query_q)
         search_results = _parse_order_by(search_results, self.api.order_by)
         search_results = search_results.distinct()
-        return list(search_results[:100])
+        return search_results
 
 
     def _parse_search_query(self, query):
