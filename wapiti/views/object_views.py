@@ -192,6 +192,5 @@ class InstanceMethodView(WapitiTypeBaseView):
         if self.method.im_self is self.model:
             return APINotFound("Method is a class method")
 
-        # create piston handler resource and call it
         return self.method(**self.args)
 

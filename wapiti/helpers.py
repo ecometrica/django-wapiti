@@ -6,7 +6,6 @@ from functools import wraps
 import sys
 
 from django.db.models import get_apps
-from piston.utils import rc
 
 from wapiti.conf import ID_RE
 
