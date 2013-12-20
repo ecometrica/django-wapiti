@@ -21,10 +21,18 @@ class ModelApi(object):
     # ['foofield__name','icontains','BOO']
     # you'll need to put 'foofield' in here
     traversable_fields = []
-    # the queryset that will be used for all accesses to these objects
+    # the queryset that will be used for all direct accesses to these objects,
+    # such as object views or calling an instance method
     # you could create a custom queryset class to allow for an api
     # type that doesn't map to an actual django type, or simply use this
     # to filter objects available through the api
     # left out so you can hook it up lazily
+    # YOU MUST DEFINE THIS ONE IN YOUR MODELAPI
     # objects = None
+
+    # queryset/manager to use when searching; this allows you to setup a more restricted
+    # set of objects when searching, while objects above would be wider, and allow older
+    # references to still be valid when used directly
+    # if not overridden, the above objects attribute will be used for searches too
+    search_objects = None
     

@@ -30,7 +30,7 @@ class ObjectOrClassMethodView(WapitiTypeBaseView):
 
     def _object_view(self, request, type, id):
         try:
-            return self.model.objects.get(id=id)
+            return self.api.objects.get(id=id)
         except (self.model.DoesNotExist, ValueError):
             return APINotFound("%s with id %s not found" % (type, id))
 
@@ -99,7 +99,7 @@ class SearchView(WapitiTypeBaseView):
         if not query:
             raise APIPoorlyFormedQuery('')
         query_q = self._parse_search_query(query)
-        search_results = self.api.objects.filter(query_q)
+        search_results = self.api.search_objects.filter(query_q)
         search_results = _parse_order_by(search_results, self.api.order_by)
         search_results = search_results.distinct()
         return search_results
@@ -116,7 +116,12 @@ class SearchView(WapitiTypeBaseView):
             if ('__' in query[0] 
                 and query[0][:query[0].rfind('__')] 
                 not in self.api.traversable_fields):
-                    raise APIEvilQuery(' '.join(query))
+
+                    raise APIEvilQuery(
+                        "You tried following %s but only %s are traversable."%(
+                            query[0].split('__')[0], ', '.join(self.api.traversable_fields)
+                        )
+                    )
             return Q(**{'__'.join(query[:2]) : query[2]})
 
         elif isinstance(query, list):
@@ -156,7 +161,7 @@ class AutoCompleteView(WapitiTypeBaseView):
         for f in self.api.auto_complete_fields:
             search_d = {'%s__%s' % (f, self.api.auto_complete_type): search_str}
             search_q |= Q(**search_d)
-        results = self.api.objects.filter(search_q)
+        results = self.api.search_objects.filter(search_q)
         results = _parse_order_by(results, self.api.order_by)
         results = results.distinct()
         return list(results)
