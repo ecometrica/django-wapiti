@@ -178,9 +178,6 @@ class WapitiBaseView(View):
                                                         **kwargs)
         except APIBaseException, e:
             return e
-        except Exception, e:
-            return APIServerError("Unknown error processing request: " + 
-                                  e.__unicode__())
         LogItem.log_api_call(apikey, request, dict(self.args))
 
         return resp
