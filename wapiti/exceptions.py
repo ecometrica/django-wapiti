@@ -7,6 +7,7 @@ import traceback
 from django.conf import settings
 from django.http import HttpResponse
 
+
 class APIBaseException(Exception):
     name = "API Error"
     def __init__(self, msg='', code=500):
@@ -93,7 +94,9 @@ class APIBadSlice(APIBaseException):
 
 class APIPoorlyFormedQuery(APIBaseException):
     name = "Poorly Formed Query"
+
     def __init__(self, query_str='', msg=''):
+        from wapiti.views.object_views import SearchView
         super(APIPoorlyFormedQuery, self).__init__(msg, 400)
         self.msg += (
             "\nMalformed query string (empty, or invalid json): "
@@ -102,7 +105,10 @@ class APIPoorlyFormedQuery(APIBaseException):
 
 class APIEvilQuery(APIBaseException):
     name = "Evil Query"
+
     def __init__(self, query_str='', msg=''):
+        from wapiti.views.object_views import SearchView
+
         super(APIEvilQuery, self).__init__(msg, 400)
         self.msg += (
             "\nYour query is evil. Following keys is not permitted: "
