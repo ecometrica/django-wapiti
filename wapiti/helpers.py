@@ -22,8 +22,9 @@ def register(name, modelapi):
         return
 
     api = modelapi()
+    api.objects = getattr(api, 'objects', api.model.objects)
     api.search_objects = getattr(api, 'search_objects', api.objects)
-    _registered_types[name] = _RegisteredType(api=modelapi())
+    _registered_types[name] = _RegisteredType(api=api)
 
 def _api_method(f, *args, **kwargs):
     return f(*args, **kwargs)
