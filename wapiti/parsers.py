@@ -256,6 +256,10 @@ class Encoder(object):
             fields = api.object_repr_fields
 
         for f in fields:
-            obj_dict[f] = eval('value.' + f)
+            # object_repr_fields is referring to fields in a different model, which is fine
+            # but leaving the dot in the field name sent is not nice on the other end,
+            # particularly in python-land where you'll need to getattr everything
+            key = f.replace('.', '__')
+            obj_dict[key] = eval('value.' + f)
         return obj_dict
 
