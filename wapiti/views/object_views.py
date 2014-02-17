@@ -176,6 +176,8 @@ class InstanceMethodView(WapitiTypeBaseView):
             self.obj = self.api.objects.get(id=id)
         except self.model.DoesNotExist:
             return APINotFound("No such object")
+        except ValueError:
+            return APINotFound("No such object: malformed id")
 
         # check if method exists
         try:
