@@ -25,7 +25,7 @@ class TestJSONDecode(unittest.TestCase):
 class TestJSONEncode(unittest.TestCase):
 
     def setUp(self):
-        self.encoder = Encoder('json')
+        self.encoder = Encoder('to_json')
 
     def test_str(self):
         self.assertEqual(self.encoder.encode("FOO"), '"FOO"')
