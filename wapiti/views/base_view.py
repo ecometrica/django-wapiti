@@ -16,7 +16,7 @@ from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.template import RequestContext, loader
 from django.utils.translation import ugettext_lazy as _
-from django.utils.functional import update_wrapper
+from functools import update_wrapper
 
 from wapiti import helpers
 from wapiti.conf import ANONYMOUS_API_KEY
