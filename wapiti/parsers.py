@@ -162,7 +162,7 @@ class Encoder(object):
         if self.jsonp:
             jsonp = re.sub(r'[^a-zA-Z0-9_]', '', self.jsonp)
             resp = u'%s(%s)'%(jsonp, resp)
-        return HttpResponse(resp, mimetype='application/json; charset=utf-8')
+        return HttpResponse(resp, content_type='application/json; charset=utf-8')
 
     def html(self, value):
         converted = self.convert(value)
@@ -171,7 +171,7 @@ class Encoder(object):
                 'style': HTML_STYLE,
                 'body': self.to_html(converted)
             }, 
-            mimetype='text/html; charset=utf-8'
+            content_type='text/html; charset=utf-8'
         )
     
     def to_html(self, value):
