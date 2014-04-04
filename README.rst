@@ -116,6 +116,20 @@ usage
 
     fastcgi_param REMOTE_ADDR $remote_addr;
     
+Release Notes
+=============
+
+v0.0.1
+~~~~~~
+
+* Initial version
+
+v0.0.2
+~~~~~~
+    
+* Slicing of results
+* Compatible with Django 1.4 to 1.6 
+
 
 .. _Ecometrica: http://ecometrica.co.uk
 .. _JSON: http://json.org
