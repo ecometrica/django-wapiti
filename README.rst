@@ -130,6 +130,12 @@ v0.0.2
 * Slicing of results
 * Compatible with Django 1.4 to 1.6 
 
+v0.0.3
+~~~~~~
+
+* post-South migrations
+* Compatible with Django 1.7 to 1.9
+
 
 .. _Ecometrica: http://ecometrica.co.uk
 .. _JSON: http://json.org
