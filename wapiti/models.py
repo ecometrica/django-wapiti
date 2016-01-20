@@ -181,17 +181,16 @@ class LimitTracking(models.Model):
     user = models.ForeignKey(User, null=True, blank=True)
     session_id = models.CharField(max_length=40, blank=True)
     count = models.IntegerField(default=0, null=False)
-    ip = models.IPAddressField(blank=True, null=True)
+    ip = models.GenericIPAddressField(blank=True, null=True)
     last_update = models.DateTimeField(auto_now=True)
-    
+
     def __unicode__(self):
-        return u'%s out of %s'%(self.count, self.limit)
-        
+        return u'%s out of %s' % (self.count, self.limit)
+
     def increment(self):
         """Resets counter based on time, or increments it
-        
+
         Returns True if limit exceeded"""
-        reset = False
         if self.limit.period != 'ever':
             now = getattr(dt.datetime.now(), self.limit.period)
             if now != getattr(self.last_update, self.limit.period):

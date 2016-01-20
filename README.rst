@@ -136,7 +136,12 @@ v0.0.3
 * post-South migrations
 * Compatible with Django 1.7 to 1.9
 
+v1.0.0
+~~~~~~
 
-.. _Ecometrica: http://ecometrica.co.uk
+* Compatible with Django 1.8 and 1.9 (no longer compatible with Django =< 1.7)
+
+
+.. _Ecometrica: http://ecometrica.com
 .. _JSON: http://json.org
 

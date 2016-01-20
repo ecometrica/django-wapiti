@@ -13,13 +13,13 @@ except:
 
 setup(
     name = "django-wapiti",
-    version = "0.0.3",
+    version = "1.0.0",
     packages = find_packages(),
     description = description,
     author = "Ecometrica",
-    author_email = "info@ecometrica.ca",
-    maintainer = "Éric St-Jean",
-    maintainer_email = "esj@wwd.ca",
+    author_email = "dev@ecometrica.com",
+    maintainer = "Rory Geoghegan",
+    maintainer_email = "rory.geoghegan@ecometrica.com",
     url = "http://github.com/ecometrica/django-wapiti/",
     keywords = ["django", "api"],
     classifiers = [
