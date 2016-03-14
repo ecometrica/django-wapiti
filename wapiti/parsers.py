@@ -2,8 +2,10 @@
 # Distributed under the BSD license. See LICENSE for details.
 import datetime as dt
 from decimal import Decimal
+from inspect import getargspec
 import json
 import re
+import warnings
 
 from django.db import models
 from django.db.models.fields.files import FieldFile
@@ -142,8 +144,7 @@ class Encoder(object):
                               override this and serialize all the fields
         file_handler: If set to a callable, the encoder will call this for 
                       outside code to do something with the file for filefields
-                      and its descendants. The arguments will be 
-                      ((field object), (file name), (file location))
+                      and its descendants. The filefield will be passed as an argument.
         max_depth: when serialiazing fields pointing to other objects, the
                    serializer will recurse to at most max_depth depth
         """
@@ -153,6 +154,8 @@ class Encoder(object):
         self.serialize_all_fields = serialize_all_fields
         self.max_depth = max_depth
         self.file_handler = file_handler
+        filehandler_args = getargspec(self.file_handler)[0]
+        self._filehandler_backwards_compat = len(filehandler_args) > 1
 
     def to_json(self, value):
         return json.dumps(self.convert(value))
@@ -226,7 +229,14 @@ class Encoder(object):
         elif isinstance(value, FieldFile):
             try:
                 if callable(self.file_handler):
-                    self.file_handler(value, value.name, value.path)
+                    if self._filehandler_backwards_compat:
+                        warnings.warn(
+                            "3-arg form of file_handle is deprecated; "
+                            "only the first argument is necessary",
+                            DeprecationWarning)
+                        self.file_handler(value, value.name, value.path)
+                    else:
+                        self.file_handler(value)
                 value = {'file': value.name}
             except ValueError:
                 value = {'file': None}
