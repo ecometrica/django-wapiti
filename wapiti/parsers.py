@@ -154,8 +154,12 @@ class Encoder(object):
         self.serialize_all_fields = serialize_all_fields
         self.max_depth = max_depth
         self.file_handler = file_handler
-        filehandler_args = getargspec(self.file_handler)[0]
-        self._filehandler_backwards_compat = len(filehandler_args) > 1
+        try:
+            filehandler_args = getargspec(self.file_handler)[0]
+            self._filehandler_backwards_compat = len(filehandler_args) > 1
+        except TypeError:
+            # Looks like self.file_handler isn't a function
+            self._filehandler_backwards_compat = False
 
     def to_json(self, value):
         return json.dumps(self.convert(value))
