@@ -141,6 +141,12 @@ v1.0.0
 
 * Compatible with Django 1.8 and 1.9 (no longer compatible with Django =< 1.7)
 
+v1.0.1
+~~~~~~
+
+* File handler now only takes field to better support non-FileSystemStorage
+  files. Old way is still supported, but deprecated.
+
 
 .. _Ecometrica: http://ecometrica.com
 .. _JSON: http://json.org
