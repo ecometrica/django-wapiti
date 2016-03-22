@@ -147,6 +147,11 @@ v1.0.1
 * File handler now only takes field to better support non-FileSystemStorage
   files. Old way is still supported, but deprecated.
 
+v1.0.2
+~~~~~~
+
+* Previous version forgot to handle the case of no file handler being
+  supplied. This release fixes that.
 
 .. _Ecometrica: http://ecometrica.com
 .. _JSON: http://json.org

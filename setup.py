@@ -13,7 +13,7 @@ except:
 
 setup(
     name = "django-wapiti",
-    version = "1.0.1",
+    version = "1.0.2",
     packages = find_packages(),
     description = description,
     author = "Ecometrica",
