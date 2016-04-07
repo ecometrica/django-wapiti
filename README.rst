@@ -153,6 +153,11 @@ v1.0.2
 * Previous version forgot to handle the case of no file handler being
   supplied. This release fixes that.
 
+v1.0.3
+~~~~~~
+
+* Allow serialising pre-1900 dates.
+
 .. _Ecometrica: http://ecometrica.com
 .. _JSON: http://json.org
 

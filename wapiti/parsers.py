@@ -227,7 +227,7 @@ class Encoder(object):
             for k, v in value.iteritems():
                 value[k] = self.convert(v, depth)
         elif isinstance(value, dt.date):
-            value = value.strftime(DATE_FORMAT)
+            value = value.isoformat()
         elif isinstance(value, Decimal):
             value = float(value)
         elif isinstance(value, FieldFile):
