@@ -32,4 +32,5 @@ setup(
         "Framework :: Django",
         ],
     long_description = long_description,
+    test_suite="tests",
 )
